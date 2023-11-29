@@ -79,12 +79,6 @@ func GCFHandlerGetUserFromID(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collec
 		Response.Message = "error parsing application/json2: " + err1.Error() + ";" + token
 		return GCFReturnStruct(Response)
 	}
-
-	err := json.NewDecoder(r.Body).Decode(&dataUser)
-	if err != nil {
-		Response.Message = "error parsing application/json3: " + err.Error()
-		return GCFReturnStruct(Response)
-	}
 	user, err := GetUserFromID(dataUser.ID, conn)
 	if err != nil {
 		Response.Message = "error parsing application/json4: " + err.Error()
@@ -96,43 +90,43 @@ func GCFHandlerGetUserFromID(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collec
 	return GCFReturnStruct(Response)
 }
 
-func GCFHandlerGetUserFromName(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
-	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
-	var Response model.Credential
-	Response.Status = false
-	var dataUser model.User
+// func GCFHandlerGetUserFromName(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
+// 	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
+// 	var Response model.Credential
+// 	Response.Status = false
+// 	var dataUser model.User
 
-	// get token from header
-	token := r.Header.Get("Authorization")
-	token = strings.TrimPrefix(token, "Bearer ")
-	if token == "" {
-		Response.Message = "error parsing application/json1:" + token
-		return GCFReturnStruct(Response)
-	}
+// 	// get token from header
+// 	token := r.Header.Get("Authorization")
+// 	token = strings.TrimPrefix(token, "Bearer ")
+// 	if token == "" {
+// 		Response.Message = "error parsing application/json1:" + token
+// 		return GCFReturnStruct(Response)
+// 	}
 
-	// decode token
-	_, err1 := watoken.Decode(os.Getenv(PASETOPUBLICKEY), token)
+// 	// decode token
+// 	_, err1 := watoken.Decode(os.Getenv(PASETOPUBLICKEY), token)
 
-	if err1 != nil {
-		Response.Message = "error parsing application/json2: " + err1.Error() + ";" + token
-		return GCFReturnStruct(Response)
-	}
+// 	if err1 != nil {
+// 		Response.Message = "error parsing application/json2: " + err1.Error() + ";" + token
+// 		return GCFReturnStruct(Response)
+// 	}
 
-	err := json.NewDecoder(r.Body).Decode(&dataUser)
-	if err != nil {
-		Response.Message = "error parsing application/json3: " + err.Error()
-		return GCFReturnStruct(Response)
-	}
-	user, err := GetUserFromName(dataUser.Name, conn)
-	if err != nil {
-		Response.Message = "error parsing application/json4: " + err.Error()
-		return GCFReturnStruct(Response)
-	}
-	Response.Status = true
-	Response.Message = "Hello user"
-	Response.Data = []model.User{user}
-	return GCFReturnStruct(Response)
-}
+// 	err := json.NewDecoder(r.Body).Decode(&dataUser)
+// 	if err != nil {
+// 		Response.Message = "error parsing application/json3: " + err.Error()
+// 		return GCFReturnStruct(Response)
+// 	}
+// 	user, err := GetUserFromName(dataUser.Name, conn)
+// 	if err != nil {
+// 		Response.Message = "error parsing application/json4: " + err.Error()
+// 		return GCFReturnStruct(Response)
+// 	}
+// 	Response.Status = true
+// 	Response.Message = "Hello user"
+// 	Response.Data = []model.User{user}
+// 	return GCFReturnStruct(Response)
+// }
 
 // SUMBER
 func GCFHandlerInsertSumber(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
@@ -192,12 +186,6 @@ func GCFHandlerGetSumberFromID(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, coll
 		Response.Message = "error parsing application/json2: " + err1.Error() + ";" + token
 		return GCFReturnStruct(Response)
 	}
-
-	err := json.NewDecoder(r.Body).Decode(&dataUser)
-	if err != nil {
-		Response.Message = "error parsing application/json3: " + err.Error()
-		return GCFReturnStruct(Response)
-	}
 	sumber, err := GetSumberFromID(dataUser.ID, conn)
 	if err != nil {
 		Response.Message = "error parsing application/json4: " + err.Error()
@@ -228,12 +216,6 @@ func GCFHandlerGetAllSumber(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collect
 		Response.Message = "error parsing application/json2: " + err1.Error() + ";" + token
 		return GCFReturnStruct(Response)
 	}
-
-	// err := json.NewDecoder(r.Body).Decode(&dataUser)
-	// if err != nil {
-	// 	Response.Message = "error parsing application/json3: " + err.Error()
-	// 	return GCFReturnStruct(Response)
-	// }
 	sumber, err := GetAllSumber(conn)
 	if err != nil {
 		Response.Message = "error parsing application/json4: " + err.Error()
@@ -304,12 +286,6 @@ func GCFHandlerGetPemasukanFromID(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, c
 		Response.Message = "error parsing application/json2: " + err1.Error() + ";" + token
 		return GCFReturnStruct(Response)
 	}
-
-	err := json.NewDecoder(r.Body).Decode(&dataUser)
-	if err != nil {
-		Response.Message = "error parsing application/json3: " + err.Error()
-		return GCFReturnStruct(Response)
-	}
 	pemasukan, err := GetPemasukanFromID(dataUser.ID, conn)
 	if err != nil {
 		Response.Message = "error parsing application/json4: " + err.Error()
@@ -340,12 +316,6 @@ func GCFHandlerGetAllPemasukan(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, coll
 		Response.Message = "error parsing application/json2: " + err1.Error() + ";" + token
 		return GCFReturnStruct(Response)
 	}
-
-	// err := json.NewDecoder(r.Body).Decode(&dataUser)
-	// if err != nil {
-	// 	Response.Message = "error parsing application/json3: " + err.Error()
-	// 	return GCFReturnStruct(Response)
-	// }
 	pemasukan, err := GetAllPemasukan(conn)
 	if err != nil {
 		Response.Message = "error parsing application/json4: " + err.Error()
@@ -416,13 +386,7 @@ func GCFHandlerDeletePemasukan(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, coll
 		Response.Message = "error parsing application/json2: " + err1.Error() + ";" + token
 		return GCFReturnStruct(Response)
 	}
-
-	err := json.NewDecoder(r.Body).Decode(&dataPemasukan)
-	if err != nil {
-		Response.Message = "error parsing application/json3: " + err.Error()
-		return GCFReturnStruct(Response)
-	}
-	err = DeletePemasukan(conn, dataPemasukan)
+	err := DeletePemasukan(conn, dataPemasukan)
 	if err != nil {
 		Response.Message = "error parsing application/json4: " + err.Error()
 		return GCFReturnStruct(Response)
@@ -491,12 +455,6 @@ func GCFHandlerGetPengeluaranFromID(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname,
 		Response.Message = "error parsing application/json2: " + err1.Error() + ";" + token
 		return GCFReturnStruct(Response)
 	}
-
-	err := json.NewDecoder(r.Body).Decode(&dataUser)
-	if err != nil {
-		Response.Message = "error parsing application/json3: " + err.Error()
-		return GCFReturnStruct(Response)
-	}
 	pengeluaran, err := GetPengeluaranFromID(dataUser.ID, conn)
 	if err != nil {
 		Response.Message = "error parsing application/json4: " + err.Error()
@@ -527,12 +485,6 @@ func GCFHandlerGetAllPengeluaran(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, co
 		Response.Message = "error parsing application/json2: " + err1.Error() + ";" + token
 		return GCFReturnStruct(Response)
 	}
-
-	// err := json.NewDecoder(r.Body).Decode(&dataUser)
-	// if err != nil {
-	// 	Response.Message = "error parsing application/json3: " + err.Error()
-	// 	return GCFReturnStruct(Response)
-	// }
 	pengeluaran, err := GetAllPengeluaran(conn)
 	if err != nil {
 		Response.Message = "error parsing application/json4: " + err.Error()
@@ -603,13 +555,7 @@ func GCFHandlerDeletePengeluaran(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, co
 		Response.Message = "error parsing application/json2: " + err1.Error() + ";" + token
 		return GCFReturnStruct(Response)
 	}
-
-	err := json.NewDecoder(r.Body).Decode(&dataPengeluaran)
-	if err != nil {
-		Response.Message = "error parsing application/json3: " + err.Error()
-		return GCFReturnStruct(Response)
-	}
-	err = DeletePengeluaran(conn, dataPengeluaran)
+	err := DeletePengeluaran(conn, dataPengeluaran)
 	if err != nil {
 		Response.Message = "error parsing application/json4: " + err.Error()
 		return GCFReturnStruct(Response)
