@@ -12,14 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-var (
-	Response    model.Response
-	user        model.User
-	pemasukan   model.Pemasukan
-	pengeluaran model.Pengeluaran
-	sumber      model.Sumber
-)
-
 func GCFHandlerSignup(MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
 	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
 	var Response model.Credential
@@ -67,37 +59,66 @@ func GCFHandlerSignin(PASETOPRIVATEKEYENV, MONGOCONNSTRINGENV, dbname, collectio
 	return GCFReturnStruct(Response)
 }
 
-func GCFHandlerGetUserFromID(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
-	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
+func GCFGetUserFromID(MONGOCONNSTRINGENV, PASETOPUBLICKEYENV, dbname, collectionname string, r *http.Request) string {
 	var Response model.Credential
 	Response.Status = false
-	var dataUser model.User
+	db := MongoConnect(MONGOCONNSTRINGENV, dbname)
 
-	// get token from header
 	token := r.Header.Get("Authorization")
 	token = strings.TrimPrefix(token, "Bearer ")
-	if token == "" {
-		Response.Message = "error parsing application/json1:" + token
-		return GCFReturnStruct(Response)
-	}
 
-	// decode token
-	_, err1 := watoken.Decode(os.Getenv(PASETOPUBLICKEY), token)
-
-	if err1 != nil {
-		Response.Message = "error parsing application/json2: " + err1.Error() + ";" + token
-		return GCFReturnStruct(Response)
-	}
-	user, err := GetUserFromID(dataUser.ID, conn)
+	profile, err := watoken.Decode(os.Getenv(PASETOPUBLICKEYENV), token)
 	if err != nil {
-		Response.Message = "error parsing application/json4: " + err.Error()
+		Response.Message = "Error decoding token: " + err.Error()
 		return GCFReturnStruct(Response)
 	}
-	Response.Status = true
-	Response.Message = "Hello user"
-	Response.Data = []model.User{user}
-	return GCFReturnStruct(Response)
+
+	userID, err := primitive.ObjectIDFromHex(profile.Id)
+	if err != nil {
+		Response.Message = "Invalid user ID in token"
+		return GCFReturnStruct(Response)
+	}
+
+	user, err := GetUserFromID(userID, db)
+	if err != nil {
+		Response.Message = "Error fetching user: " + err.Error()
+		return GCFReturnStruct(Response)
+	}
+
+	return GCFReturnStruct(user)
 }
+
+// func GCFHandlerGetUserFromID(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
+// 	db := MongoConnect(MONGOCONNSTRINGENV, dbname)
+// 	var Response model.Credential
+// 	Response.Status = false
+// 	var dataUser model.User
+
+// 	// get token from header
+// 	token := r.Header.Get("Authorization")
+// 	token = strings.TrimPrefix(token, "Bearer ")
+// 	if token == "" {
+// 		Response.Message = "error parsing application/json1:" + token
+// 		return GCFReturnStruct(Response)
+// 	}
+
+// 	// decode token
+// 	_, err1 := watoken.Decode(os.Getenv(PASETOPUBLICKEY), token)
+
+// 	if err1 != nil {
+// 		Response.Message = "error parsing application/json2: " + err1.Error() + ";" + token
+// 		return GCFReturnStruct(Response)
+// 	}
+// 	user, err := GetUserFromID(dataUser.ID, db)
+// 	if err != nil {
+// 		Response.Message = "error parsing application/json4: " + err.Error()
+// 		return GCFReturnStruct(Response)
+// 	}
+// 	Response.Status = true
+// 	Response.Message = "Hello user"
+// 	Response.Data = []model.User{user}
+// 	return GCFReturnStruct(Response)
+// }
 
 // func GCFHandlerGetUserFromName(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
 // 	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
@@ -174,85 +195,37 @@ func GCFHandlerInsertSumber(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collect
 	return GCFReturnStruct(Response)
 }
 
-func GCFHandlerGetSumber(PASETOPUBLICKEYENV, MONGOCONNSTRINGENV, dbname string, r *http.Request) string {
+func GCFHandlerGetSumberFromID(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
 	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
+	var Response model.SumberResponse
 	Response.Status = false
+	var dataUser model.User
 
-	id := GetID(r)
-	if id == "" {
-		return GCFHandlerGetAllSumber(MONGOCONNSTRINGENV, dbname, "sumber", PASETOPUBLICKEYENV, r)
-	}
-
-	idParam, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		Response.Message = "Invalid ID parameter"
+	// get token from header
+	token := r.Header.Get("Authorization")
+	token = strings.TrimPrefix(token, "Bearer ")
+	if token == "" {
+		Response.Message = "error parsing application/json1:" + token
 		return GCFReturnStruct(Response)
 	}
 
-	sumber, err := GetSumberFromID(idParam, conn)
-	if err != nil {
-		Response.Message = err.Error()
+	// decode token
+	_, err1 := watoken.Decode(os.Getenv(PASETOPUBLICKEY), token)
+
+	if err1 != nil {
+		Response.Message = "error parsing application/json2: " + err1.Error() + ";" + token
 		return GCFReturnStruct(Response)
 	}
-
-	return GCFReturnStruct(sumber)
+	sumber, err := GetSumberFromID(dataUser.ID, conn)
+	if err != nil {
+		Response.Message = "error parsing application/json4: " + err.Error()
+		return GCFReturnStruct(Response)
+	}
+	Response.Status = true
+	Response.Message = "Selamat Datang " + dataUser.Email
+	Response.Data = []model.Sumber{sumber}
+	return GCFReturnStruct(Response)
 }
-
-func GCFHandlerGetSumberFromID(MONGOCONNSTRINGENV, dbname, PASETOPUBLICKEYENV string, r *http.Request) string {
-	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
-	var Response model.Response
-	Response.Status = false
-	id := GetID(r)
-	if id == "" {
-		// Menggantilah nilai hardcoded dengan nilai variabel atau konstanta yang sesuai
-		collectionName := "sumber"
-		apiKey := "01361392439c5d625e6d25032b602ff8a5c459826192b52ed4d60104a885f710"
-		return GCFHandlerGetAllSumber(MONGOCONNSTRINGENV, dbname, collectionName, apiKey, r)
-	}
-	objID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		Response.Message = "Invalid id parameter"
-		return GCFReturnStruct(Response)
-	}
-	data, err := GetSumberFromID(objID, conn)
-	if err != nil {
-		Response.Message = err.Error()
-		return GCFReturnStruct(Response)
-	}
-	return GCFReturnStruct(data)
-}
-
-// func GCFHandlerGetSumberFromID(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
-// 	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
-// 	var Response model.SumberResponse
-// 	Response.Status = false
-// 	var dataUser model.User
-
-// 	// get token from header
-// 	token := r.Header.Get("Authorization")
-// 	token = strings.TrimPrefix(token, "Bearer ")
-// 	if token == "" {
-// 		Response.Message = "error parsing application/json1:" + token
-// 		return GCFReturnStruct(Response)
-// 	}
-
-// 	// decode token
-// 	_, err1 := watoken.Decode(os.Getenv(PASETOPUBLICKEY), token)
-
-// 	if err1 != nil {
-// 		Response.Message = "error parsing application/json2: " + err1.Error() + ";" + token
-// 		return GCFReturnStruct(Response)
-// 	}
-// 	sumber, err := GetSumberFromID(dataUser.ID, conn)
-// 	if err != nil {
-// 		Response.Message = "error parsing application/json4: " + err.Error()
-// 		return GCFReturnStruct(Response)
-// 	}
-// 	Response.Status = true
-// 	Response.Message = "Selamat Datang " + dataUser.Email
-// 	Response.Data = []model.Sumber{sumber}
-// 	return GCFReturnStruct(Response)
-// }
 
 func GCFHandlerGetAllSumber(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
 	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)

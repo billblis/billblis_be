@@ -311,6 +311,18 @@ func TestGetUserFromID(t *testing.T) {
 
 }
 
+
+
+func TestGetUserFromEmail(t *testing.T) {
+	email := "yellow12@gmail.com"
+	user, err := module.GetUserFromEmail(email, db)
+	if err != nil {
+		t.Errorf("Error getting user: %v", err)
+	} else {
+		fmt.Println("Welcome back:", user)
+	}
+}
+
 func TestGetUserFromName(t *testing.T) {
 	name := "Fedhira Syaila"
 	user, err := module.GetUserFromName(name, db)
