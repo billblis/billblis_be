@@ -293,13 +293,13 @@ func GetSumberFromID(_id primitive.ObjectID, db *mongo.Database) (doc model.Sumb
 
 // PEMASUKAN
 
-func InsertPemasukan(db *mongo.Database, col string, tanggal_masuk string, jumlah_masuk int, id_sumber model.Sumber, deskripsi string, id_user model.User) (insertedID primitive.ObjectID, err error) {
+func InsertPemasukan(db *mongo.Database, col string, tanggal_masuk string, jumlah_masuk int, sumber string, deskripsi string) (insertedID primitive.ObjectID, err error) {
 	pemasukan := bson.M{
 		"tanggal_masuk": tanggal_masuk,
 		"jumlah_masuk":  jumlah_masuk,
-		"id_sumber":     id_sumber,
+		"sumber":        sumber,
 		"deskripsi":     deskripsi,
-		"id_user":       id_user,
+		// "id_user":       id_user,
 	}
 	result, err := db.Collection(col).InsertOne(context.Background(), pemasukan)
 	if err != nil {
@@ -412,13 +412,13 @@ func DeletePemasukan(db *mongo.Database, col string, _id primitive.ObjectID) (st
 
 // PENGELUARAN
 
-func InsertPengeluaran(db *mongo.Database, col string, tanggal_keluar string, jumlah_keluar int, id_sumber model.Sumber, deskripsi string, id_user model.User) (insertedID primitive.ObjectID, err error) {
+func InsertPengeluaran(db *mongo.Database, col string, tanggal_keluar string, jumlah_keluar int, sumber string, deskripsi string) (insertedID primitive.ObjectID, err error) {
 	pengeluaran := bson.M{
 		"tanggal_keluar": tanggal_keluar,
 		"jumlah_keluar":  jumlah_keluar,
-		"id_sumber":      id_sumber,
+		"sumber":         sumber,
 		"deskripsi":      deskripsi,
-		"id_user":        id_user,
+		// "id_user":        id_user,
 	}
 	result, err := db.Collection(col).InsertOne(context.Background(), pengeluaran)
 	if err != nil {

@@ -269,7 +269,7 @@ func GCFHandlerInsertPemasukan(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, coll
 		return GCFReturnStruct(pemasukanResponse)
 	}
 
-	_, err = InsertPemasukan(mconn, collectionname, pemasukan.Tanggal_masuk, pemasukan.Jumlah_masuk, pemasukan.Sumber, pemasukan.Deskripsi, pemasukan.User)
+	_, err = InsertPemasukan(mconn, collectionname, pemasukan.Tanggal_masuk, pemasukan.Jumlah_masuk, pemasukan.Sumber, pemasukan.Deskripsi)
 	if err != nil {
 		pemasukanResponse.Message = "error inserting Pemasukan: " + err.Error()
 		return GCFReturnStruct(pemasukanResponse)
@@ -514,7 +514,7 @@ func GCFHandlerInsertPengeluaran(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, co
 		return GCFReturnStruct(pengeluaranResponse)
 	}
 
-	_, err = InsertPengeluaran(mconn, collectionname, pengeluaran.Tanggal_keluar, pengeluaran.Jumlah_keluar, pengeluaran.Sumber, pengeluaran.Deskripsi, pengeluaran.User)
+	_, err = InsertPengeluaran(mconn, collectionname, pengeluaran.Tanggal_keluar, pengeluaran.Jumlah_keluar, pengeluaran.Sumber, pengeluaran.Deskripsi)
 	if err != nil {
 		pengeluaranResponse.Message = "error inserting Pengeluaran: " + err.Error()
 		return GCFReturnStruct(pengeluaranResponse)

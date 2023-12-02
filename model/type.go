@@ -27,17 +27,16 @@ type Pemasukan struct {
 	ID            primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
 	Tanggal_masuk string             `bson:"tanggal_masuk,omitempty" json:"tanggal_masuk,omitempty"`
 	Jumlah_masuk  int                `bson:"jumlah_masuk,omitempty" json:"jumlah_masuk,omitempty"`
-	Sumber        Sumber             `bson:"sumber,omitempty" json:"sumber,omitempty"`
+	Sumber        string             `bson:"sumber,omitempty" json:"sumber,omitempty"`
 	Deskripsi     string             `bson:"deskripsi,omitempty" json:"deskripsi,omitempty"`
-	User          User               `bson:"user,omitempty" json:"user,omitempty"`
+	// User          User               `bson:"user,omitempty" json:"user,omitempty"`
 }
 type Pengeluaran struct {
 	ID             primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
 	Tanggal_keluar string             `bson:"tanggal_keluar,omitempty" json:"tanggal_keluar,omitempty"`
 	Jumlah_keluar  int                `bson:"jumlah_keluar,omitempty" json:"jumlah_keluar,omitempty"`
-	Sumber         Sumber             `bson:"sumber,omitempty" json:"sumber,omitempty"`
+	Sumber         string             `bson:"sumber,omitempty" json:"sumber,omitempty"`
 	Deskripsi      string             `bson:"deskripsi,omitempty" json:"deskripsi,omitempty"`
-	User           User               `bson:"user,omitempty" json:"user,omitempty"`
 }
 
 type Sumber struct {

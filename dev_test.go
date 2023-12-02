@@ -86,12 +86,11 @@ func TestInsertPemasukan(t *testing.T) {
 	var doc model.Pemasukan
 	doc.Tanggal_masuk = "26/02/2023"
 	doc.Jumlah_masuk = 50000
-	// Isi ID_sumber dan ID_user sesuai kebutuhan, contoh:
-	doc.Sumber = model.Sumber{Nama_sumber: "Gaji"}
+	doc.Sumber = "Gaji"
 	doc.Deskripsi = "dari kantor"
-	doc.User = model.User{Username: "Fedhira Syaila"}
+	// doc.User = model.User{Username: "Fedhira Syaila"}
 
-	hasil, err := module.InsertPemasukan(db, "pemasukan", doc.Tanggal_masuk, doc.Jumlah_masuk, doc.Sumber, doc.Deskripsi, doc.User)
+	hasil, err := module.InsertPemasukan(db, "pemasukan", doc.Tanggal_masuk, doc.Jumlah_masuk, doc.Sumber, doc.Deskripsi)
 	if err != nil {
 		t.Errorf("Error inserting document: %v", err)
 	} else {
@@ -161,10 +160,10 @@ func TestUpdatePemasukan(t *testing.T) {
 	var doc model.Pemasukan
 	doc.Tanggal_masuk = "22/02/2023"
 	doc.Jumlah_masuk = 230000
-	doc.Sumber.Nama_sumber = "Freelance"
+	doc.Sumber = "Freelance"
 	doc.Deskripsi = "dari joki ngoding"
-	doc.User.Username = "Fedhira"
-	id, err := primitive.ObjectIDFromHex("656aa6a880e1ce803654944b")
+	// doc.User.Username = "Fedhira"
+	id, err := primitive.ObjectIDFromHex("656b136035e729467ff7874e")
 	doc.ID = id
 	if err != nil {
 		fmt.Printf("Data tidak berhasil diubah dengan id")
@@ -222,11 +221,11 @@ func TestInsertPengeluaran(t *testing.T) {
 	var doc model.Pengeluaran
 	doc.Tanggal_keluar = "02/12/2023"
 	doc.Jumlah_keluar = 50000
-	doc.Sumber = model.Sumber{Nama_sumber: "Konsumsi"}
+	doc.Sumber = "Konsumsi"
 	doc.Deskripsi = "makan ayam"
-	doc.User = model.User{Username: "Fedhira Syaila"}
+	// doc.User = model.User{Username: "Fedhira Syaila"}
 
-	hasil, err := module.InsertPengeluaran(db, "pengeluaran", doc.Tanggal_keluar, doc.Jumlah_keluar, doc.Sumber, doc.Deskripsi, doc.User)
+	hasil, err := module.InsertPengeluaran(db, "pengeluaran", doc.Tanggal_keluar, doc.Jumlah_keluar, doc.Sumber, doc.Deskripsi)
 	if err != nil {
 		t.Errorf("Error inserting document: %v", err)
 	} else {
@@ -296,10 +295,10 @@ func TestUpdatePengeluaran(t *testing.T) {
 	var doc model.Pengeluaran
 	doc.Tanggal_keluar = "22/02/2023"
 	doc.Jumlah_keluar = 230000
-	doc.Sumber.Nama_sumber = "Kesehatan"
+	doc.Sumber = "Kesehatan"
 	doc.Deskripsi = "ke rs"
-	doc.User.Username = "Fedhira"
-	id, err := primitive.ObjectIDFromHex("656aae6787d12c4f9cd1d5ff")
+	// doc.User.Username = "Fedhira"
+	id, err := primitive.ObjectIDFromHex("656b13fde033611d0d6e691a")
 	doc.ID = id
 	if err != nil {
 		fmt.Printf("Data tidak berhasil diubah dengan id")
