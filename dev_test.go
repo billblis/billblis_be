@@ -99,16 +99,26 @@ func TestInsertPemasukan(t *testing.T) {
 	fmt.Println(hasil)
 }
 
+
 func TestGetAllPemasukan(t *testing.T) {
-	var docs []model.Pemasukan
-	docs, err := module.GetAllPemasukan(db)
+	doc, err := module.GetAllPemasukan(db, "pemasukan")
 	if err != nil {
-		t.Errorf("Error inserting document: %v", err)
-	} else {
-		fmt.Println("Data berhasil disimpan dengan id :", docs)
+		t.Errorf("Error getting pemasukan: %v", err)
+		return
 	}
-	fmt.Println(docs)
+	fmt.Println(doc)
 }
+
+// func TestGetAllPemasukan(t *testing.T) {
+// 	var docs []model.Pemasukan
+// 	docs, err := module.GetAllPemasukan(db)
+// 	if err != nil {
+// 		t.Errorf("Error inserting document: %v", err)
+// 	} else {
+// 		fmt.Println("Data berhasil disimpan dengan id :", docs)
+// 	}
+// 	fmt.Println(docs)
+// }
 
 func TestGetPemasukanFromID(t *testing.T) {
 	id, _ := primitive.ObjectIDFromHex("656aa6a880e1ce803654944b")
@@ -235,15 +245,25 @@ func TestInsertPengeluaran(t *testing.T) {
 }
 
 func TestGetAllPengeluaran(t *testing.T) {
-	var docs []model.Pengeluaran
-	docs, err := module.GetAllPengeluaran(db)
+	doc, err := module.GetAllPengeluaran(db, "pengeluaran")
 	if err != nil {
-		t.Errorf("Error inserting document: %v", err)
-	} else {
-		fmt.Println("Data berhasil disimpan dengan id :", docs)
+		t.Errorf("Error getting pengeluaran: %v", err)
+		return
 	}
-	fmt.Println(docs)
+	fmt.Println(doc)
 }
+
+
+// func TestGetAllPengeluaran(t *testing.T) {
+// 	var docs []model.Pengeluaran
+// 	docs, err := module.GetAllPengeluaran(db)
+// 	if err != nil {
+// 		t.Errorf("Error inserting document: %v", err)
+// 	} else {
+// 		fmt.Println("Data berhasil disimpan dengan id :", docs)
+// 	}
+// 	fmt.Println(docs)
+// }
 
 // func TestGetPengeluaranFromID(t *testing.T) {
 // 	id := "65646471f789492812e11a7a"

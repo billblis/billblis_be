@@ -277,6 +277,7 @@ func GCFHandlerInsertPemasukan(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, coll
 
 	pemasukanResponse.Status = true
 	pemasukanResponse.Message = "Insert Pemasukan success"
+	pemasukanResponse.Data = []model.Pemasukan{pemasukan}
 	return GCFReturnStruct(pemasukanResponse)
 }
 
@@ -354,34 +355,63 @@ func GCFHandlerGetPemasukanFromID(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, c
 // }
 
 func GCFHandlerGetAllPemasukan(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
-	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
-
+	mconn := MongoConnect(MONGOCONNSTRINGENV, dbname)
 	pemasukanResponse.Status = false
-	// get token from header
+
 	token := r.Header.Get("Authorization")
-	token = strings.TrimPrefix(token, "Bearer ")
 	if token == "" {
 		pemasukanResponse.Message = "error parsing application/json1:"
 		return GCFReturnStruct(pemasukanResponse)
 	}
 
-	// decode token
-	_, err1 := watoken.Decode(os.Getenv(PASETOPUBLICKEY), token)
-
-	if err1 != nil {
-		pemasukanResponse.Message = "error parsing application/json2: " + err1.Error() + ";" + token
-		return GCFReturnStruct(pemasukanResponse)
-	}
-	pemasukan, err := GetAllPemasukan(conn)
+	_, err := watoken.Decode(os.Getenv(PASETOPUBLICKEY), token)
 	if err != nil {
-		pemasukanResponse.Message = "error parsing application/json4: " + err.Error()
+		pemasukanResponse.Message = "error parsing application/json2:" + err.Error() + ";" + token
 		return GCFReturnStruct(pemasukanResponse)
 	}
+
+	pemasukan, err := GetAllPemasukan(mconn, collectionname)
+	if err != nil {
+		pemasukanResponse.Message = err.Error()
+		return GCFReturnStruct(pemasukanResponse)
+	}
+
 	pemasukanResponse.Status = true
-	pemasukanResponse.Message = "Berhasil mendapatkan semua pemasukan"
+	pemasukanResponse.Message = "Get pemasukan success"
 	pemasukanResponse.Data = pemasukan
+
 	return GCFReturnStruct(pemasukanResponse)
 }
+
+// func GCFHandlerGetAllPemasukan(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
+// 	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
+
+// 	pemasukanResponse.Status = false
+// 	// get token from header
+// 	token := r.Header.Get("Authorization")
+// 	token = strings.TrimPrefix(token, "Bearer ")
+// 	if token == "" {
+// 		pemasukanResponse.Message = "error parsing application/json1:"
+// 		return GCFReturnStruct(pemasukanResponse)
+// 	}
+
+// 	// decode token
+// 	_, err1 := watoken.Decode(os.Getenv(PASETOPUBLICKEY), token)
+
+// 	if err1 != nil {
+// 		pemasukanResponse.Message = "error parsing application/json2: " + err1.Error() + ";" + token
+// 		return GCFReturnStruct(pemasukanResponse)
+// 	}
+// 	pemasukan, err := GetAllPemasukan(conn)
+// 	if err != nil {
+// 		pemasukanResponse.Message = "error parsing application/json4: " + err.Error()
+// 		return GCFReturnStruct(pemasukanResponse)
+// 	}
+// 	pemasukanResponse.Status = true
+// 	pemasukanResponse.Message = "Berhasil mendapatkan semua pemasukan"
+// 	pemasukanResponse.Data = pemasukan
+// 	return GCFReturnStruct(pemasukanResponse)
+// }
 
 func GCFHandlerUpdatePemasukan(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
 	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
@@ -522,6 +552,7 @@ func GCFHandlerInsertPengeluaran(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, co
 
 	pengeluaranResponse.Status = true
 	pengeluaranResponse.Message = "Insert Pengeluaran success"
+	pengeluaranResponse.Data = []model.Pengeluaran{pengeluaran}
 	return GCFReturnStruct(pengeluaranResponse)
 }
 
@@ -597,33 +628,62 @@ func GCFHandlerGetPengeluaranFromID(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname,
 // }
 
 func GCFHandlerGetAllPengeluaran(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
-	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
+	mconn := MongoConnect(MONGOCONNSTRINGENV, dbname)
 	pengeluaranResponse.Status = false
-	// get token from header
+
 	token := r.Header.Get("Authorization")
-	token = strings.TrimPrefix(token, "Bearer ")
 	if token == "" {
 		pengeluaranResponse.Message = "error parsing application/json1:"
 		return GCFReturnStruct(pengeluaranResponse)
 	}
 
-	// decode token
-	_, err1 := watoken.Decode(os.Getenv(PASETOPUBLICKEY), token)
-
-	if err1 != nil {
-		pengeluaranResponse.Message = "error parsing application/json2: " + err1.Error() + ";" + token
-		return GCFReturnStruct(pengeluaranResponse)
-	}
-	pengeluaran, err := GetAllPengeluaran(conn)
+	_, err := watoken.Decode(os.Getenv(PASETOPUBLICKEY), token)
 	if err != nil {
-		pengeluaranResponse.Message = "error parsing application/json4: " + err.Error()
+		pengeluaranResponse.Message = "error parsing application/json2:" + err.Error() + ";" + token
 		return GCFReturnStruct(pengeluaranResponse)
 	}
+
+	pengeluaran, err := GetAllPengeluaran(mconn, collectionname)
+	if err != nil {
+		pengeluaranResponse.Message = err.Error()
+		return GCFReturnStruct(pengeluaranResponse)
+	}
+
 	pengeluaranResponse.Status = true
-	pengeluaranResponse.Message = "Berhasil mendapatkan semua pengeluaran"
+	pengeluaranResponse.Message = "Get pengeluaran success"
 	pengeluaranResponse.Data = pengeluaran
+
 	return GCFReturnStruct(pengeluaranResponse)
 }
+
+// func GCFHandlerGetAllPengeluaran(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
+// 	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)
+// 	pengeluaranResponse.Status = false
+// 	// get token from header
+// 	token := r.Header.Get("Authorization")
+// 	token = strings.TrimPrefix(token, "Bearer ")
+// 	if token == "" {
+// 		pengeluaranResponse.Message = "error parsing application/json1:"
+// 		return GCFReturnStruct(pengeluaranResponse)
+// 	}
+
+// 	// decode token
+// 	_, err1 := watoken.Decode(os.Getenv(PASETOPUBLICKEY), token)
+
+// 	if err1 != nil {
+// 		pengeluaranResponse.Message = "error parsing application/json2: " + err1.Error() + ";" + token
+// 		return GCFReturnStruct(pengeluaranResponse)
+// 	}
+// 	pengeluaran, err := GetAllPengeluaran(conn)
+// 	if err != nil {
+// 		pengeluaranResponse.Message = "error parsing application/json4: " + err.Error()
+// 		return GCFReturnStruct(pengeluaranResponse)
+// 	}
+// 	pengeluaranResponse.Status = true
+// 	pengeluaranResponse.Message = "Berhasil mendapatkan semua pengeluaran"
+// 	pengeluaranResponse.Data = pengeluaran
+// 	return GCFReturnStruct(pengeluaranResponse)
+// }
 
 func GCFHandlerUpdatePengeluaran(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
 	conn := MongoConnect(MONGOCONNSTRINGENV, dbname)

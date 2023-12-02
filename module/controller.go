@@ -310,30 +310,49 @@ func InsertPemasukan(db *mongo.Database, col string, tanggal_masuk string, jumla
 	return insertedID, nil
 }
 
-func GetAllPemasukan(db *mongo.Database) (pemasukan []model.Pemasukan, err error) {
-	collection := db.Collection("pemasukan")
+
+func GetAllPemasukan(db *mongo.Database, col string) (pemasukan []model.Pemasukan, err error) {
+	cols := db.Collection(col)
 	filter := bson.M{}
 
-	cursor, err := collection.Find(context.Background(), filter)
+	cursor, err := cols.Find(context.Background(), filter)
 	if err != nil {
-		return pemasukan, fmt.Errorf("error GetAllPemasukan mongo: %s", err)
+		fmt.Println("Error GetPemasukan in colection", col, ":", err)
+		return nil, err
 	}
 
-	// Iterate through the cursor and decode each document
-	for cursor.Next(context.Background()) {
-		var p model.Pemasukan
-		if err := cursor.Decode(&p); err != nil {
-			return pemasukan, fmt.Errorf("error decoding document: %s", err)
-		}
-		pemasukan = append(pemasukan, p)
-	}
-
-	if err := cursor.Err(); err != nil {
-		return pemasukan, fmt.Errorf("error during cursor iteration: %s", err)
+	err = cursor.All(context.Background(), &pemasukan)
+	if err != nil {
+		fmt.Println(err)
 	}
 
 	return pemasukan, nil
 }
+
+// func GetAllPemasukan(db *mongo.Database) (pemasukan []model.Pemasukan, err error) {
+// 	collection := db.Collection("pemasukan")
+// 	filter := bson.M{}
+
+// 	cursor, err := collection.Find(context.Background(), filter)
+// 	if err != nil {
+// 		return pemasukan, fmt.Errorf("error GetAllPemasukan mongo: %s", err)
+// 	}
+
+// 	// Iterate through the cursor and decode each document
+// 	for cursor.Next(context.Background()) {
+// 		var p model.Pemasukan
+// 		if err := cursor.Decode(&p); err != nil {
+// 			return pemasukan, fmt.Errorf("error decoding document: %s", err)
+// 		}
+// 		pemasukan = append(pemasukan, p)
+// 	}
+
+// 	if err := cursor.Err(); err != nil {
+// 		return pemasukan, fmt.Errorf("error during cursor iteration: %s", err)
+// 	}
+
+// 	return pemasukan, nil
+// }
 
 func GetPemasukanFromID(db *mongo.Database, col string, _id primitive.ObjectID) (pemasukan model.Pemasukan, err error) {
 	cols := db.Collection(col)
@@ -429,30 +448,50 @@ func InsertPengeluaran(db *mongo.Database, col string, tanggal_keluar string, ju
 	return insertedID, nil
 }
 
-func GetAllPengeluaran(db *mongo.Database) (pengeluaran []model.Pengeluaran, err error) {
-	collection := db.Collection("pengeluaran")
+
+func GetAllPengeluaran(db *mongo.Database, col string) (pengeluaran []model.Pengeluaran, err error) {
+	cols := db.Collection(col)
 	filter := bson.M{}
 
-	cursor, err := collection.Find(context.Background(), filter)
+	cursor, err := cols.Find(context.Background(), filter)
 	if err != nil {
-		return pengeluaran, fmt.Errorf("error GetAllPengeluaran mongo: %s", err)
+		fmt.Println("Error GetPengeluaran in colection", col, ":", err)
+		return nil, err
 	}
 
-	// Iterate through the cursor and decode each document
-	for cursor.Next(context.Background()) {
-		var p model.Pengeluaran
-		if err := cursor.Decode(&p); err != nil {
-			return pengeluaran, fmt.Errorf("error decoding document: %s", err)
-		}
-		pengeluaran = append(pengeluaran, p)
-	}
-
-	if err := cursor.Err(); err != nil {
-		return pengeluaran, fmt.Errorf("error during cursor iteration: %s", err)
+	err = cursor.All(context.Background(), &pengeluaran)
+	if err != nil {
+		fmt.Println(err)
 	}
 
 	return pengeluaran, nil
 }
+
+
+// func GetAllPengeluaran(db *mongo.Database) (pengeluaran []model.Pengeluaran, err error) {
+// 	collection := db.Collection("pengeluaran")
+// 	filter := bson.M{}
+
+// 	cursor, err := collection.Find(context.Background(), filter)
+// 	if err != nil {
+// 		return pengeluaran, fmt.Errorf("error GetAllPengeluaran mongo: %s", err)
+// 	}
+
+// 	// Iterate through the cursor and decode each document
+// 	for cursor.Next(context.Background()) {
+// 		var p model.Pengeluaran
+// 		if err := cursor.Decode(&p); err != nil {
+// 			return pengeluaran, fmt.Errorf("error decoding document: %s", err)
+// 		}
+// 		pengeluaran = append(pengeluaran, p)
+// 	}
+
+// 	if err := cursor.Err(); err != nil {
+// 		return pengeluaran, fmt.Errorf("error during cursor iteration: %s", err)
+// 	}
+
+// 	return pengeluaran, nil
+// }
 
 func GetPengeluaranFromID(db *mongo.Database, col string, _id primitive.ObjectID) (pengeluaran model.Pengeluaran, err error) {
 	cols := db.Collection(col)
