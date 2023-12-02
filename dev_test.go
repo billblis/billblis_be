@@ -14,24 +14,23 @@ var db = module.MongoConnect("MONGOSTRING", "billblis")
 // TEST SIGN UP
 func TestSignUp(t *testing.T) {
 	var doc model.User
-	doc.Name = "Fedhira Syaila"
-	doc.Email = "yellow12@gmail.com"
-	doc.Password = "yellow12"
-	doc.MotherName = "siti"
+	doc.Username = "Marlina Lubis"
+	doc.Email = "marlina@gmail.com"
+	doc.Password = "marlinalubis12"
 
 	err := module.SignUp(db, "user", doc)
 	if err != nil {
 		t.Errorf("Error inserting document: %v", err)
 	} else {
-		fmt.Println("Data berhasil disimpan dengan nama :", doc.Name)
+		fmt.Println("Data berhasil disimpan dengan nama :", doc.Username)
 	}
 }
 
 // TEST SIGN IN
 func TestSignIn(t *testing.T) {
 	var doc model.User
-	doc.Email = "yellow12@gmail.com"
-	doc.Password = "yellow12"
+	doc.Username = "Marlina Lubis"
+	doc.Password = "marlinalubis12"
 	user, Status, err := module.SignIn(db, "user", doc)
 	fmt.Println("Status :", Status)
 	if err != nil {
@@ -88,11 +87,11 @@ func TestInsertPemasukan(t *testing.T) {
 	doc.Tanggal_masuk = "26/02/2023"
 	doc.Jumlah_masuk = 50000
 	// Isi ID_sumber dan ID_user sesuai kebutuhan, contoh:
-	doc.ID_sumber = model.Sumber{Nama_sumber: "Gaji"}
+	doc.Sumber = model.Sumber{Nama_sumber: "Gaji"}
 	doc.Deskripsi = "dari kantor"
-	doc.ID_user = model.User{Name: "Fedhira Syaila"}
+	doc.User = model.User{Username: "Fedhira Syaila"}
 
-	hasil, err := module.InsertPemasukan(db, "pemasukan", doc.Tanggal_masuk, doc.Jumlah_masuk, doc.ID_sumber, doc.Deskripsi, doc.ID_user)
+	hasil, err := module.InsertPemasukan(db, "pemasukan", doc.Tanggal_masuk, doc.Jumlah_masuk, doc.Sumber, doc.Deskripsi, doc.User)
 	if err != nil {
 		t.Errorf("Error inserting document: %v", err)
 	} else {
@@ -113,19 +112,29 @@ func TestGetAllPemasukan(t *testing.T) {
 }
 
 func TestGetPemasukanFromID(t *testing.T) {
-	id := "6565676bb3e79ceef0540910"
-	objectId, err := primitive.ObjectIDFromHex(id)
+	id, _ := primitive.ObjectIDFromHex("656aa6a880e1ce803654944b")
+	doc, err := module.GetPemasukanFromID(db, "pemasukan", id)
 	if err != nil {
-		t.Errorf("Error getting document: %v", err)
-	} else {
-		user, err := module.GetPemasukanFromID(objectId, db)
-		if err != nil {
-			t.Errorf("Error getting document: %v", err)
-		} else {
-			fmt.Println(user)
-		}
+		t.Errorf("Error getting pemasukan: %v", err)
+		return
 	}
+	fmt.Println(doc)
 }
+
+// func TestGetPemasukanFromID(t *testing.T) {
+// 	id := "6565676bb3e79ceef0540910"
+// 	objectId, err := primitive.ObjectIDFromHex(id)
+// 	if err != nil {
+// 		t.Errorf("Error getting document: %v", err)
+// 	} else {
+// 		user, err := module.GetPemasukanFromID(objectId, db)
+// 		if err != nil {
+// 			t.Errorf("Error getting document: %v", err)
+// 		} else {
+// 			fmt.Println(user)
+// 		}
+// 	}
+// }
 
 // func TestUpdatePemasukan(t *testing.T) {
 // 	var doc model.Pemasukan
@@ -152,10 +161,10 @@ func TestUpdatePemasukan(t *testing.T) {
 	var doc model.Pemasukan
 	doc.Tanggal_masuk = "22/02/2023"
 	doc.Jumlah_masuk = 230000
-	doc.ID_sumber.Nama_sumber = "Freelance"
+	doc.Sumber.Nama_sumber = "Freelance"
 	doc.Deskripsi = "dari joki ngoding"
-	doc.ID_user.Name = "Fedhira"
-	id, err := primitive.ObjectIDFromHex("6565676bb3e79ceef0540910")
+	doc.User.Username = "Fedhira"
+	id, err := primitive.ObjectIDFromHex("656aa6a880e1ce803654944b")
 	doc.ID = id
 	if err != nil {
 		fmt.Printf("Data tidak berhasil diubah dengan id")
@@ -172,33 +181,52 @@ func TestUpdatePemasukan(t *testing.T) {
 }
 
 func TestDeletePemasukan(t *testing.T) {
-	var doc model.Pemasukan
-	id, err := primitive.ObjectIDFromHex("6564639a6e6e2f66eee84ddd")
-	doc.ID = id
+	id := "6565676bb3e79ceef0540910"
+	ID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		fmt.Printf("Data tidak berhasil dihapus dengan id")
+		t.Errorf("Error converting id to ObjectID: %v", err)
+		return
 	} else {
 
-		err = module.DeletePemasukan(db, doc)
+		status, err := module.DeletePemasukan(db, "pemasukan", ID)
+		fmt.Println("Status", status)
 		if err != nil {
-			t.Errorf("Error updateting document: %v", err)
+			t.Errorf("Error deleting document: %v", err)
+			return
 		} else {
-			fmt.Println("Data berhasil dihapus dengan id :", doc.ID)
+			fmt.Println("Delete success")
 		}
 	}
 }
+
+// func TestDeletePemasukan(t *testing.T) {
+// 	var doc model.Pemasukan
+// 	id, err := primitive.ObjectIDFromHex("6564639a6e6e2f66eee84ddd")
+// 	doc.ID = id
+// 	if err != nil {
+// 		fmt.Printf("Data tidak berhasil dihapus dengan id")
+// 	} else {
+
+// 		err = module.DeletePemasukan(db, doc)
+// 		if err != nil {
+// 			t.Errorf("Error updateting document: %v", err)
+// 		} else {
+// 			fmt.Println("Data berhasil dihapus dengan id :", doc.ID)
+// 		}
+// 	}
+// }
 
 // PENGELUARAN
 
 func TestInsertPengeluaran(t *testing.T) {
 	var doc model.Pengeluaran
-	doc.Tanggal_keluar = "26/02/2023"
+	doc.Tanggal_keluar = "02/12/2023"
 	doc.Jumlah_keluar = 50000
-	// Isi ID_sumber dan ID_user sesuai kebutuhan, contoh:
-	doc.ID_sumber = model.Sumber{Nama_sumber: "Konsumsi"}
-	doc.ID_user = model.User{Name: "Fedhira Syaila"}
+	doc.Sumber = model.Sumber{Nama_sumber: "Konsumsi"}
+	doc.Deskripsi = "makan ayam"
+	doc.User = model.User{Username: "Fedhira Syaila"}
 
-	hasil, err := module.InsertPengeluaran(db, "pengeluaran", doc.Tanggal_keluar, doc.Jumlah_keluar, doc.ID_sumber, doc.Deskripsi, doc.ID_user)
+	hasil, err := module.InsertPengeluaran(db, "pengeluaran", doc.Tanggal_keluar, doc.Jumlah_keluar, doc.Sumber, doc.Deskripsi, doc.User)
 	if err != nil {
 		t.Errorf("Error inserting document: %v", err)
 	} else {
@@ -218,19 +246,29 @@ func TestGetAllPengeluaran(t *testing.T) {
 	fmt.Println(docs)
 }
 
+// func TestGetPengeluaranFromID(t *testing.T) {
+// 	id := "65646471f789492812e11a7a"
+// 	objectId, err := primitive.ObjectIDFromHex(id)
+// 	if err != nil {
+// 		t.Errorf("Error getting document: %v", err)
+// 	} else {
+// 		user, err := module.GetPengeluaranFromID(objectId, db)
+// 		if err != nil {
+// 			t.Errorf("Error getting document: %v", err)
+// 		} else {
+// 			fmt.Println(user)
+// 		}
+// 	}
+// }
+
 func TestGetPengeluaranFromID(t *testing.T) {
-	id := "65646471f789492812e11a7a"
-	objectId, err := primitive.ObjectIDFromHex(id)
+	id, _ := primitive.ObjectIDFromHex("656aae6787d12c4f9cd1d5ff")
+	doc, err := module.GetPengeluaranFromID(db, "pengeluaran", id)
 	if err != nil {
-		t.Errorf("Error getting document: %v", err)
-	} else {
-		user, err := module.GetPengeluaranFromID(objectId, db)
-		if err != nil {
-			t.Errorf("Error getting document: %v", err)
-		} else {
-			fmt.Println(user)
-		}
+		t.Errorf("Error getting pengeluaran: %v", err)
+		return
 	}
+	fmt.Println(doc)
 }
 
 // func TestUpdatePemasukan(t *testing.T) {
@@ -258,10 +296,10 @@ func TestUpdatePengeluaran(t *testing.T) {
 	var doc model.Pengeluaran
 	doc.Tanggal_keluar = "22/02/2023"
 	doc.Jumlah_keluar = 230000
-	doc.ID_sumber.Nama_sumber = "Kesehatan"
+	doc.Sumber.Nama_sumber = "Kesehatan"
 	doc.Deskripsi = "ke rs"
-	doc.ID_user.Name = "Fedhira"
-	id, err := primitive.ObjectIDFromHex("656464a7b23a402327223b46")
+	doc.User.Username = "Fedhira"
+	id, err := primitive.ObjectIDFromHex("656aae6787d12c4f9cd1d5ff")
 	doc.ID = id
 	if err != nil {
 		fmt.Printf("Data tidak berhasil diubah dengan id")
@@ -278,115 +316,78 @@ func TestUpdatePengeluaran(t *testing.T) {
 }
 
 func TestDeletePengeluaran(t *testing.T) {
-	var doc model.Pengeluaran
-	id, err := primitive.ObjectIDFromHex("6565774763f64428805965ef")
-	doc.ID = id
+	id := "656aae6787d12c4f9cd1d5ff"
+	ID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		fmt.Printf("Data tidak berhasil dihapus dengan id")
+		t.Errorf("Error converting id to ObjectID: %v", err)
+		return
 	} else {
 
-		err = module.DeletePengeluaran(db, doc)
+		status, err := module.DeletePengeluaran(db, "pengeluaran", ID)
+		fmt.Println("Status", status)
 		if err != nil {
-			t.Errorf("Error updateting document: %v", err)
+			t.Errorf("Error deleting document: %v", err)
+			return
 		} else {
-			fmt.Println("Data berhasil dihapus dengan id :", doc.ID)
+			fmt.Println("Delete success")
 		}
 	}
 }
+
+// func TestDeletePengeluaran(t *testing.T) {
+// 	var doc model.Pengeluaran
+// 	id, err := primitive.ObjectIDFromHex("6565774763f64428805965ef")
+// 	doc.ID = id
+// 	if err != nil {
+// 		fmt.Printf("Data tidak berhasil dihapus dengan id")
+// 	} else {
+
+// 		err = module.DeletePengeluaran(db, doc)
+// 		if err != nil {
+// 			t.Errorf("Error updateting document: %v", err)
+// 		} else {
+// 			fmt.Println("Data berhasil dihapus dengan id :", doc.ID)
+// 		}
+// 	}
+// }
 
 // TEST GET USER
+
 func TestGetUserFromID(t *testing.T) {
 	id := "65631b4de009209dea4dc55e"
-	objectId, err := primitive.ObjectIDFromHex(id)
+	ID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		t.Errorf("Error getting document: %v", err)
-	} else {
-		user, err := module.GetUserFromID(objectId, db)
-		if err != nil {
-			t.Errorf("Error getting document: %v", err)
-		} else {
-			fmt.Println("Welcome back:", user)
-		}
+		t.Errorf("Error converting id to ObjectID: %v", err)
+		return
 	}
 
+	doc, err := module.GetUserFromID(db, "user", ID)
+	if err != nil {
+		t.Errorf("Error getting user: %v", err)
+		return
+	}
+	fmt.Println(doc)
 }
-
-
 
 func TestGetUserFromEmail(t *testing.T) {
-	email := "yellow12@gmail.com"
-	user, err := module.GetUserFromEmail(email, db)
-	if err != nil {
-		t.Errorf("Error getting user: %v", err)
-	} else {
-		fmt.Println("Welcome back:", user)
-	}
+	doc, _ := module.GetUserFromEmail(db, "user", "yellow12@gmail.com")
+	fmt.Println(doc)
 }
 
-func TestGetUserFromName(t *testing.T) {
-	name := "Fedhira Syaila"
-	user, err := module.GetUserFromName(name, db)
+func TestGetUserFromUsername(t *testing.T) {
+	doc, err := module.GetUserFromUsername(db, "user", "Fedhira Syaila")
 	if err != nil {
 		t.Errorf("Error getting user: %v", err)
-	} else {
-		fmt.Println("Welcome back:", user)
+		return
 	}
+	fmt.Println(doc)
 }
 
-
-
-// func TestGeneratePasswordHash(t *testing.T) {
-// 	password := "yellow"
-// 	hash, _ := HashPassword(password) // ignore error for the sake of simplicity
-// 	fmt.Println("Password:", password)
-// 	fmt.Println("Hash:    ", hash)
-
-// 	match := CheckPasswordHash(password, hash)
-// 	fmt.Println("Match:   ", match)
-// }
-// func TestGeneratePrivateKeyPaseto(t *testing.T) {
-// 	privateKey, publicKey := watoken.GenerateKey()
-// 	fmt.Println("privateKey")
-// 	fmt.Println(privateKey)
-// 	fmt.Println("publicKey")
-// 	fmt.Println(publicKey)
-// 	fmt.Println("HASIL")
-// 	hasil, err := watoken.Encode("Billblis", privateKey)
-// 	fmt.Println(hasil, err)
-// }
-
-// func TestHashFunction(t *testing.T) {
-// 	mconn := SetConnection("MONGOSTRING", "billblis")
-// 	var userdata User
-// 	userdata.Username = "renjun"
-// 	userdata.Password = "yellow"
-
-// 	filter := bson.M{"username": userdata.Username}
-// 	res := atdb.GetOneDoc[User](mconn, "user", filter)
-// 	fmt.Println("Mongo User Result: ", res)
-// 	hash, _ := HashPassword(userdata.Password)
-// 	fmt.Println("Hash Password : ", hash)
-// 	match := CheckPasswordHash(userdata.Password, res.Password)
-// 	fmt.Println("Match:   ", match)
-
-// }
-
-// func TestIsPasswordValid(t *testing.T) {
-// 	mconn := SetConnection("MONGOSTRING", "billblis")
-// 	var userdata User
-// 	userdata.Username = "renjun"
-// 	userdata.Password = "yellow"
-
-// 	anu := IsPasswordValid(mconn, "user", userdata)
-// 	fmt.Println(anu)
-// }
-
-// func TestInsertUser(t *testing.T) {
-// 	mconn := SetConnection("MONGOSTRING", "billblis")
-// 	var userdata User
-// 	userdata.Username = "renjun"
-// 	userdata.Password = "yellow"
-
-// 	nama := InsertUser(mconn, "user", userdata)
-// 	fmt.Println(nama)
-// }
+func TestGetAllUser(t *testing.T) {
+	doc, err := module.GetAllUser(db, "user")
+	if err != nil {
+		t.Errorf("Error getting user: %v", err)
+		return
+	}
+	fmt.Println(doc)
+}

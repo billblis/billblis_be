@@ -109,31 +109,46 @@ func DeleteOneDoc(_id primitive.ObjectID, db *mongo.Database, col string) error 
 func SignUp(db *mongo.Database, col string, insertedDoc model.User) error {
 	objectId := primitive.NewObjectID()
 
-	if insertedDoc.Name == "" || insertedDoc.Email == "" || insertedDoc.Password == "" || insertedDoc.MotherName == "" {
+	if insertedDoc.Username == "" || insertedDoc.Email == "" || insertedDoc.Password == "" {
 		return fmt.Errorf("mohon untuk melengkapi data")
 	}
+
+	// Periksa apakah email valid
 	if err := checkmail.ValidateFormat(insertedDoc.Email); err != nil {
 		return fmt.Errorf("email tidak valid")
 	}
-	userExists, _ := GetUserFromEmail(insertedDoc.Email, db)
+
+	// Periksa apakah email dan username sudah terdaftar
+	userExists, _ := GetUserFromEmail(db, col, insertedDoc.Email)
 	if insertedDoc.Email == userExists.Email {
 		return fmt.Errorf("email sudah terdaftar")
 	}
+
+	userExists, _ = GetUserFromUsername(db, col, insertedDoc.Username)
+	if userExists.Username != "" {
+		return fmt.Errorf("Username sudah terdaftar")
+	}
+
 	if strings.Contains(insertedDoc.Password, " ") {
 		return fmt.Errorf("password tidak boleh mengandung spasi")
 	}
-	if len(insertedDoc.Password) < 8 {
-		return fmt.Errorf("password terlalu pendek")
+
+	// Periksa apakah password memenuhi syarat
+	if len(insertedDoc.Password) < 6 {
+		return fmt.Errorf("Password minimal 6 karakter")
+	}
+
+	if strings.Contains(insertedDoc.Password, " ") {
+		return fmt.Errorf("Password tidak boleh mengandung spasi")
 	}
 
 	hash, _ := HashPassword(insertedDoc.Password)
 	// insertedDoc.Password = hash
 	user := bson.M{
-		"_id":        objectId,
-		"email":      insertedDoc.Email,
-		"password":   hash,
-		"name":       insertedDoc.Name,
-		"mothername": insertedDoc.MotherName,
+		"_id":      objectId,
+		"email":    insertedDoc.Email,
+		"password": hash,
+		"username": insertedDoc.Username,
 	}
 	_, err := InsertOneDoc(db, col, user)
 	if err != nil {
@@ -144,21 +159,97 @@ func SignUp(db *mongo.Database, col string, insertedDoc model.User) error {
 
 // SIGN IN
 func SignIn(db *mongo.Database, col string, insertedDoc model.User) (user model.User, Status bool, err error) {
-	if insertedDoc.Email == "" || insertedDoc.Password == "" {
+	if insertedDoc.Username == "" || insertedDoc.Password == "" {
 		return user, false, fmt.Errorf("mohon untuk melengkapi data")
 	}
-	if err = checkmail.ValidateFormat(insertedDoc.Email); err != nil {
-		return user, false, fmt.Errorf("email tidak valid")
+
+	// Periksa apakah pengguna dengan username tertentu ada
+	userExists, _ := GetUserFromUsername(db, col, insertedDoc.Username)
+	if userExists.Username == "" {
+		err = fmt.Errorf("Username tidak ditemukan")
+		return user, false, err
 	}
-	existsDoc, err := GetUserFromEmail(insertedDoc.Email, db)
-	if err != nil {
-		return
-	}
-	if !CheckPasswordHash(insertedDoc.Password, existsDoc.Password) {
-		return user, false, fmt.Errorf("password salah")
+	// Periksa apakah kata sandi benar
+	if !CheckPasswordHash(insertedDoc.Password, userExists.Password) {
+		err = fmt.Errorf("Password salah")
+		return user, false, err
 	}
 
-	return existsDoc, true, nil
+	return userExists, true, nil
+}
+
+// GET USER
+func GetUserFromID(db *mongo.Database, col string, _id primitive.ObjectID) (user model.User, err error) {
+	cols := db.Collection(col)
+	filter := bson.M{"_id": _id}
+
+	err = cols.FindOne(context.TODO(), filter).Decode(&user)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			err := fmt.Errorf("no data found for ID %s", _id)
+			return user, err
+		}
+
+		err := fmt.Errorf("error retrieving data for ID %s: %s", _id, err.Error())
+		return user, err
+	}
+
+	return user, nil
+}
+
+func GetUserFromEmail(db *mongo.Database, col string, email string) (user model.User, err error) {
+	cols := db.Collection(col)
+	filter := bson.M{"email": email}
+
+	err = cols.FindOne(context.TODO(), filter).Decode(&user)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			err := fmt.Errorf("no data found for email %s", email)
+			return user, err
+		}
+
+		err := fmt.Errorf("error retrieving data for email %s: %s", email, err.Error())
+		return user, err
+	}
+
+	return user, nil
+}
+
+func GetUserFromUsername(db *mongo.Database, col string, username string) (user model.User, err error) {
+	cols := db.Collection(col)
+	filter := bson.M{"username": username}
+
+	err = cols.FindOne(context.TODO(), filter).Decode(&user)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			err := fmt.Errorf("no data found for username %s", username)
+			return user, err
+		}
+
+		err := fmt.Errorf("error retrieving data for username %s: %s", username, err.Error())
+		return user, err
+	}
+
+	return user, nil
+}
+
+func GetAllUser(db *mongo.Database, col string) (userlist []model.User, err error) {
+	cols := db.Collection(col)
+	filter := bson.M{}
+
+	cur, err := cols.Find(context.Background(), filter)
+	if err != nil {
+		fmt.Println("Error GetAllUser in colection", col, ":", err)
+		return userlist, err
+	}
+
+	err = cur.All(context.Background(), &userlist)
+	if err != nil {
+		fmt.Println("Error reading documents:", err)
+		return userlist, err
+	}
+
+	return userlist, nil
 }
 
 // SUMBER
@@ -244,18 +335,34 @@ func GetAllPemasukan(db *mongo.Database) (pemasukan []model.Pemasukan, err error
 	return pemasukan, nil
 }
 
-func GetPemasukanFromID(_id primitive.ObjectID, db *mongo.Database) (doc model.Pemasukan, err error) {
-	collection := db.Collection("pemasukan")
+func GetPemasukanFromID(db *mongo.Database, col string, _id primitive.ObjectID) (pemasukan model.Pemasukan, err error) {
+	cols := db.Collection(col)
 	filter := bson.M{"_id": _id}
-	err = collection.FindOne(context.TODO(), filter).Decode(&doc)
+
+	err = cols.FindOne(context.Background(), filter).Decode(&pemasukan)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return doc, fmt.Errorf("_id tidak ditemukan")
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			fmt.Println("no data found for ID", _id)
+		} else {
+			fmt.Println("error retrieving data for ID", _id, ":", err.Error())
 		}
-		return doc, fmt.Errorf("kesalahan server")
 	}
-	return doc, nil
+
+	return pemasukan, nil
 }
+
+// func GetPemasukanFromID(_id primitive.ObjectID, db *mongo.Database) (doc model.Pemasukan, err error) {
+// 	collection := db.Collection("pemasukan")
+// 	filter := bson.M{"_id": _id}
+// 	err = collection.FindOne(context.TODO(), filter).Decode(&doc)
+// 	if err != nil {
+// 		if err == mongo.ErrNoDocuments {
+// 			return doc, fmt.Errorf("_id tidak ditemukan")
+// 		}
+// 		return doc, fmt.Errorf("kesalahan server")
+// 	}
+// 	return doc, nil
+// }
 
 func UpdatePemasukan(db *mongo.Database, doc model.Pemasukan) (err error) {
 	filter := bson.M{"_id": doc.ID}
@@ -271,20 +378,37 @@ func UpdatePemasukan(db *mongo.Database, doc model.Pemasukan) (err error) {
 	return nil
 }
 
-func DeletePemasukan(db *mongo.Database, doc model.Pemasukan) error {
-	collection := db.Collection("pemasukan")
-	filter := bson.M{"_id": doc.ID}
-	result, err := collection.DeleteOne(context.Background(), filter)
+func DeletePemasukan(db *mongo.Database, col string, _id primitive.ObjectID) (status bool, err error) {
+	cols := db.Collection(col)
+	filter := bson.M{"_id": _id}
+
+	result, err := cols.DeleteOne(context.Background(), filter)
 	if err != nil {
-		return fmt.Errorf("error deleting data for ID %s: %s", doc.ID, err.Error())
+		return false, err
 	}
 
 	if result.DeletedCount == 0 {
-		return fmt.Errorf("data with ID %s not found", doc.ID)
+		err = fmt.Errorf("Data tidak berhasil dihapus")
+		return false, err
 	}
 
-	return nil
+	return true, nil
 }
+
+// func DeletePemasukan(db *mongo.Database, doc model.Pemasukan) error {
+// 	collection := db.Collection("pemasukan")
+// 	filter := bson.M{"_id": doc.ID}
+// 	result, err := collection.DeleteOne(context.Background(), filter)
+// 	if err != nil {
+// 		return fmt.Errorf("error deleting data for ID %s: %s", doc.ID, err.Error())
+// 	}
+
+// 	if result.DeletedCount == 0 {
+// 		return fmt.Errorf("data with ID %s not found", doc.ID)
+// 	}
+
+// 	return nil
+// }
 
 // PENGELUARAN
 
@@ -330,18 +454,34 @@ func GetAllPengeluaran(db *mongo.Database) (pengeluaran []model.Pengeluaran, err
 	return pengeluaran, nil
 }
 
-func GetPengeluaranFromID(_id primitive.ObjectID, db *mongo.Database) (doc model.Pengeluaran, err error) {
-	collection := db.Collection("pengeluaran")
+func GetPengeluaranFromID(db *mongo.Database, col string, _id primitive.ObjectID) (pengeluaran model.Pengeluaran, err error) {
+	cols := db.Collection(col)
 	filter := bson.M{"_id": _id}
-	err = collection.FindOne(context.TODO(), filter).Decode(&doc)
+
+	err = cols.FindOne(context.Background(), filter).Decode(&pengeluaran)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return doc, fmt.Errorf("_id tidak ditemukan")
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			fmt.Println("no data found for ID", _id)
+		} else {
+			fmt.Println("error retrieving data for ID", _id, ":", err.Error())
 		}
-		return doc, fmt.Errorf("kesalahan server")
 	}
-	return doc, nil
+
+	return pengeluaran, nil
 }
+
+// func GetPengeluaranFromID(_id primitive.ObjectID, db *mongo.Database) (doc model.Pengeluaran, err error) {
+// 	collection := db.Collection("pengeluaran")
+// 	filter := bson.M{"_id": _id}
+// 	err = collection.FindOne(context.TODO(), filter).Decode(&doc)
+// 	if err != nil {
+// 		if err == mongo.ErrNoDocuments {
+// 			return doc, fmt.Errorf("_id tidak ditemukan")
+// 		}
+// 		return doc, fmt.Errorf("kesalahan server")
+// 	}
+// 	return doc, nil
+// }
 
 func UpdatePengeluaran(db *mongo.Database, doc model.Pengeluaran) (err error) {
 	filter := bson.M{"_id": doc.ID}
@@ -357,57 +497,34 @@ func UpdatePengeluaran(db *mongo.Database, doc model.Pengeluaran) (err error) {
 	return nil
 }
 
-func DeletePengeluaran(db *mongo.Database, doc model.Pengeluaran) error {
-	collection := db.Collection("pengeluaran")
-	filter := bson.M{"_id": doc.ID}
-	result, err := collection.DeleteOne(context.Background(), filter)
+func DeletePengeluaran(db *mongo.Database, col string, _id primitive.ObjectID) (status bool, err error) {
+	cols := db.Collection(col)
+	filter := bson.M{"_id": _id}
+
+	result, err := cols.DeleteOne(context.Background(), filter)
 	if err != nil {
-		return fmt.Errorf("error deleting data for ID %s: %s", doc.ID, err.Error())
+		return false, err
 	}
 
 	if result.DeletedCount == 0 {
-		return fmt.Errorf("data with ID %s not found", doc.ID)
+		err = fmt.Errorf("Data tidak berhasil dihapus")
+		return false, err
 	}
 
-	return nil
+	return true, nil
 }
 
-// GET USER
-func GetUserFromID(_id primitive.ObjectID, db *mongo.Database) (doc model.User, err error) {
-	collection := db.Collection("user")
-	filter := bson.M{"_id": _id}
-	err = collection.FindOne(context.TODO(), filter).Decode(&doc)
-	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return doc, fmt.Errorf("no data found for ID %s", _id)
-		}
-		return doc, fmt.Errorf("error retrieving data for ID %s: %s", _id, err.Error())
-	}
-	return doc, nil
-}
+// func DeletePengeluaran(db *mongo.Database, doc model.Pengeluaran) error {
+// 	collection := db.Collection("pengeluaran")
+// 	filter := bson.M{"_id": doc.ID}
+// 	result, err := collection.DeleteOne(context.Background(), filter)
+// 	if err != nil {
+// 		return fmt.Errorf("error deleting data for ID %s: %s", doc.ID, err.Error())
+// 	}
 
-func GetUserFromEmail(email string, db *mongo.Database) (doc model.User, err error) {
-	collection := db.Collection("user")
-	filter := bson.M{"email": email}
-	err = collection.FindOne(context.TODO(), filter).Decode(&doc)
-	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return doc, fmt.Errorf("email tidak ditemukan")
-		}
-		return doc, fmt.Errorf("kesalahan server")
-	}
-	return doc, nil
-}
+// 	if result.DeletedCount == 0 {
+// 		return fmt.Errorf("data with ID %s not found", doc.ID)
+// 	}
 
-func GetUserFromName(name string, db *mongo.Database) (doc model.User, err error) {
-	collection := db.Collection("user")
-	filter := bson.M{"name": name}
-	err = collection.FindOne(context.TODO(), filter).Decode(&doc)
-	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return doc, fmt.Errorf("username tidak ditemukan")
-		}
-		return doc, fmt.Errorf("kesalahan server")
-	}
-	return doc, nil
-}
+// 	return nil
+// }
