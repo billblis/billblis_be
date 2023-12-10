@@ -293,23 +293,49 @@ func GetSumberFromID(_id primitive.ObjectID, db *mongo.Database) (doc model.Sumb
 
 // PEMASUKAN
 
-func InsertPemasukan(db *mongo.Database, col string, tanggal_masuk string, jumlah_masuk int, sumber string, deskripsi string) (insertedID primitive.ObjectID, err error) {
+func InsertPemasukan(db *mongo.Database, col string, pemasukanDoc model.Pemasukan, username string) (insertedID primitive.ObjectID, err error) {
+	if pemasukanDoc.Tanggal_masuk == "" || pemasukanDoc.Jumlah_masuk == 0 || pemasukanDoc.Sumber == "" {
+		err = fmt.Errorf("Data tidak boleh kosong")
+		return insertedID, err
+	}
+
+	objectId := primitive.NewObjectID()
+
 	pemasukan := bson.M{
-		"tanggal_masuk": tanggal_masuk,
-		"jumlah_masuk":  jumlah_masuk,
-		"sumber":        sumber,
-		"deskripsi":     deskripsi,
+		"_id":           objectId,
+		"tanggal_masuk": pemasukanDoc.Tanggal_masuk,
+		"jumlah_masuk":  pemasukanDoc.Jumlah_masuk,
+		"sumber":        pemasukanDoc.Sumber,
+		"deskripsi":     pemasukanDoc.Deskripsi,
+		"user": bson.M{
+			"username": username,
+		},
 		// "id_user":       id_user,
 	}
-	result, err := db.Collection(col).InsertOne(context.Background(), pemasukan)
+	insertedID, err = InsertOneDoc(db, col, pemasukan)
 	if err != nil {
 		fmt.Printf("InsertPemasukan: %v\n", err)
-		return
 	}
-	insertedID = result.InsertedID.(primitive.ObjectID)
+
 	return insertedID, nil
 }
 
+// func InsertPemasukan(db *mongo.Database, col string, tanggal_masuk string, jumlah_masuk int, sumber string, deskripsi string) (insertedID primitive.ObjectID, err error) {
+// 	pemasukan := bson.M{
+// 		"tanggal_masuk": tanggal_masuk,
+// 		"jumlah_masuk":  jumlah_masuk,
+// 		"sumber":        sumber,
+// 		"deskripsi":     deskripsi,
+// 		// "id_user":       id_user,
+// 	}
+// 	result, err := db.Collection(col).InsertOne(context.Background(), pemasukan)
+// 	if err != nil {
+// 		fmt.Printf("InsertPemasukan: %v\n", err)
+// 		return
+// 	}
+// 	insertedID = result.InsertedID.(primitive.ObjectID)
+// 	return insertedID, nil
+// }
 
 func GetAllPemasukan(db *mongo.Database, col string) (pemasukan []model.Pemasukan, err error) {
 	cols := db.Collection(col)
@@ -370,32 +396,53 @@ func GetPemasukanFromID(db *mongo.Database, col string, _id primitive.ObjectID) 
 	return pemasukan, nil
 }
 
-// func GetPemasukanFromID(_id primitive.ObjectID, db *mongo.Database) (doc model.Pemasukan, err error) {
-// 	collection := db.Collection("pemasukan")
-// 	filter := bson.M{"_id": _id}
-// 	err = collection.FindOne(context.TODO(), filter).Decode(&doc)
-// 	if err != nil {
-// 		if err == mongo.ErrNoDocuments {
-// 			return doc, fmt.Errorf("_id tidak ditemukan")
-// 		}
-// 		return doc, fmt.Errorf("kesalahan server")
-// 	}
-// 	return doc, nil
-// }
+func UpdatePemasukan(db *mongo.Database, col string, doc model.Pemasukan) (docs model.Pemasukan, status bool, err error) {
+	if doc.Tanggal_masuk == "" || doc.Jumlah_masuk == 0 || doc.Sumber == "" {
+		err = fmt.Errorf("Data tidak lengkap")
+		return docs, false, err
+	}
 
-func UpdatePemasukan(db *mongo.Database, doc model.Pemasukan) (err error) {
+	cols := db.Collection(col)
 	filter := bson.M{"_id": doc.ID}
-	result, err := db.Collection("pemasukan").UpdateOne(context.Background(), filter, bson.M{"$set": doc})
+	update := bson.M{
+		"$set": bson.M{
+			"tanggal_masuk": doc.Tanggal_masuk,
+			"jumlah_masuk":  doc.Jumlah_masuk,
+			"sumber":        doc.Sumber,
+			"deskripsi":     doc.Deskripsi,
+		},
+	}
+	result, err := cols.UpdateOne(context.Background(), filter, update)
 	if err != nil {
-		fmt.Printf("UpdatePemasukan: %v\n", err)
-		return
+		return docs, false, err
 	}
-	if result.ModifiedCount == 0 {
-		err = errors.New("no data has been changed with the specified id")
-		return
+
+	if result.ModifiedCount == 0 && result.UpsertedCount == 0 {
+		err = fmt.Errorf("Data tidak berhasil diupdate")
+		return docs, false, err
 	}
-	return nil
+
+	err = cols.FindOne(context.Background(), filter).Decode(&docs)
+	if err != nil {
+		return docs, false, err
+	}
+
+	return docs, true, nil
 }
+
+// func UpdatePemasukan(db *mongo.Database, doc model.Pemasukan) (err error) {
+// 	filter := bson.M{"_id": doc.ID}
+// 	result, err := db.Collection("pemasukan").UpdateOne(context.Background(), filter, bson.M{"$set": doc})
+// 	if err != nil {
+// 		fmt.Printf("UpdatePemasukan: %v\n", err)
+// 		return
+// 	}
+// 	if result.ModifiedCount == 0 {
+// 		err = errors.New("no data has been changed with the specified id")
+// 		return
+// 	}
+// 	return nil
+// }
 
 func DeletePemasukan(db *mongo.Database, col string, _id primitive.ObjectID) (status bool, err error) {
 	cols := db.Collection(col)
@@ -431,23 +478,48 @@ func DeletePemasukan(db *mongo.Database, col string, _id primitive.ObjectID) (st
 
 // PENGELUARAN
 
-func InsertPengeluaran(db *mongo.Database, col string, tanggal_keluar string, jumlah_keluar int, sumber string, deskripsi string) (insertedID primitive.ObjectID, err error) {
-	pengeluaran := bson.M{
-		"tanggal_keluar": tanggal_keluar,
-		"jumlah_keluar":  jumlah_keluar,
-		"sumber":         sumber,
-		"deskripsi":      deskripsi,
-		// "id_user":        id_user,
+func InsertPengeluaran(db *mongo.Database, col string, pengeluaranDoc model.Pengeluaran, username string) (insertedID primitive.ObjectID, err error) {
+	if pengeluaranDoc.Tanggal_keluar == "" || pengeluaranDoc.Jumlah_keluar == 0 || pengeluaranDoc.Sumber == "" {
+		err = fmt.Errorf("Data tidak boleh kosong")
+		return insertedID, err
 	}
-	result, err := db.Collection(col).InsertOne(context.Background(), pengeluaran)
+
+	objectId := primitive.NewObjectID()
+
+	pengeluaran := bson.M{
+		"_id":            objectId,
+		"tanggal_keluar": pengeluaranDoc.Tanggal_keluar,
+		"jumlah_keluar":  pengeluaranDoc.Jumlah_keluar,
+		"sumber":         pengeluaranDoc.Sumber,
+		"deskripsi":      pengeluaranDoc.Deskripsi,
+		"user": bson.M{
+			"username": username,
+		},
+		// "id_user":       id_user,
+	}
+	insertedID, err = InsertOneDoc(db, col, pengeluaran)
 	if err != nil {
 		fmt.Printf("InsertPengeluaran: %v\n", err)
-		return
 	}
-	insertedID = result.InsertedID.(primitive.ObjectID)
+
 	return insertedID, nil
 }
 
+// func InsertPengeluaran(db *mongo.Database, col string, pengeluaranDoc model.Pengeluaran) (insertedID primitive.ObjectID, err error) {
+// 	pengeluaran := bson.M{
+// 		"tanggal_masuk": pengeluaranDoc.Tanggal_keluar,
+// 		"jumlah_masuk":  pengeluaranDoc.Jumlah_keluar,
+// 		"sumber":        pengeluaranDoc.Sumber,
+// 		"deskripsi":     pengeluaranDoc.Deskripsi,
+// 		// "id_user":       id_user,
+// 	}
+// 	insertedID, err = InsertOneDoc(db, col, pengeluaran)
+// 	if err != nil {
+// 		fmt.Printf("InsertPemasukan: %v\n", err)
+// 	}
+
+// 	return insertedID, nil
+// }
 
 func GetAllPengeluaran(db *mongo.Database, col string) (pengeluaran []model.Pengeluaran, err error) {
 	cols := db.Collection(col)
@@ -467,32 +539,6 @@ func GetAllPengeluaran(db *mongo.Database, col string) (pengeluaran []model.Peng
 	return pengeluaran, nil
 }
 
-
-// func GetAllPengeluaran(db *mongo.Database) (pengeluaran []model.Pengeluaran, err error) {
-// 	collection := db.Collection("pengeluaran")
-// 	filter := bson.M{}
-
-// 	cursor, err := collection.Find(context.Background(), filter)
-// 	if err != nil {
-// 		return pengeluaran, fmt.Errorf("error GetAllPengeluaran mongo: %s", err)
-// 	}
-
-// 	// Iterate through the cursor and decode each document
-// 	for cursor.Next(context.Background()) {
-// 		var p model.Pengeluaran
-// 		if err := cursor.Decode(&p); err != nil {
-// 			return pengeluaran, fmt.Errorf("error decoding document: %s", err)
-// 		}
-// 		pengeluaran = append(pengeluaran, p)
-// 	}
-
-// 	if err := cursor.Err(); err != nil {
-// 		return pengeluaran, fmt.Errorf("error during cursor iteration: %s", err)
-// 	}
-
-// 	return pengeluaran, nil
-// }
-
 func GetPengeluaranFromID(db *mongo.Database, col string, _id primitive.ObjectID) (pengeluaran model.Pengeluaran, err error) {
 	cols := db.Collection(col)
 	filter := bson.M{"_id": _id}
@@ -509,32 +555,53 @@ func GetPengeluaranFromID(db *mongo.Database, col string, _id primitive.ObjectID
 	return pengeluaran, nil
 }
 
-// func GetPengeluaranFromID(_id primitive.ObjectID, db *mongo.Database) (doc model.Pengeluaran, err error) {
-// 	collection := db.Collection("pengeluaran")
-// 	filter := bson.M{"_id": _id}
-// 	err = collection.FindOne(context.TODO(), filter).Decode(&doc)
-// 	if err != nil {
-// 		if err == mongo.ErrNoDocuments {
-// 			return doc, fmt.Errorf("_id tidak ditemukan")
-// 		}
-// 		return doc, fmt.Errorf("kesalahan server")
-// 	}
-// 	return doc, nil
-// }
+func UpdatePengeluaran(db *mongo.Database, col string, doc model.Pengeluaran) (docs model.Pengeluaran, status bool, err error) {
+	if doc.Tanggal_keluar == "" || doc.Jumlah_keluar == 0 || doc.Sumber == "" {
+		err = fmt.Errorf("Data tidak lengkap")
+		return docs, false, err
+	}
 
-func UpdatePengeluaran(db *mongo.Database, doc model.Pengeluaran) (err error) {
+	cols := db.Collection(col)
 	filter := bson.M{"_id": doc.ID}
-	result, err := db.Collection("pengeluaran").UpdateOne(context.Background(), filter, bson.M{"$set": doc})
+	update := bson.M{
+		"$set": bson.M{
+			"tanggal_keluar": doc.Tanggal_keluar,
+			"jumlah_keluar":  doc.Jumlah_keluar,
+			"sumber":         doc.Sumber,
+			"deskripsi":      doc.Deskripsi,
+		},
+	}
+	result, err := cols.UpdateOne(context.Background(), filter, update)
 	if err != nil {
-		fmt.Printf("UpdatePengeluaran: %v\n", err)
-		return
+		return docs, false, err
 	}
-	if result.ModifiedCount == 0 {
-		err = errors.New("no data has been changed with the specified id")
-		return
+
+	if result.ModifiedCount == 0 && result.UpsertedCount == 0 {
+		err = fmt.Errorf("Data tidak berhasil diupdate")
+		return docs, false, err
 	}
-	return nil
+
+	err = cols.FindOne(context.Background(), filter).Decode(&docs)
+	if err != nil {
+		return docs, false, err
+	}
+
+	return docs, true, nil
 }
+
+// func UpdatePengeluaran(db *mongo.Database, doc model.Pengeluaran) (err error) {
+// 	filter := bson.M{"_id": doc.ID}
+// 	result, err := db.Collection("pengeluaran").UpdateOne(context.Background(), filter, bson.M{"$set": doc})
+// 	if err != nil {
+// 		fmt.Printf("UpdatePengeluaran: %v\n", err)
+// 		return
+// 	}
+// 	if result.ModifiedCount == 0 {
+// 		err = errors.New("no data has been changed with the specified id")
+// 		return
+// 	}
+// 	return nil
+// }
 
 func DeletePengeluaran(db *mongo.Database, col string, _id primitive.ObjectID) (status bool, err error) {
 	cols := db.Collection(col)

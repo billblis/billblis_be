@@ -29,7 +29,7 @@ type Pemasukan struct {
 	Jumlah_masuk  int                `bson:"jumlah_masuk,omitempty" json:"jumlah_masuk,omitempty"`
 	Sumber        string             `bson:"sumber,omitempty" json:"sumber,omitempty"`
 	Deskripsi     string             `bson:"deskripsi,omitempty" json:"deskripsi,omitempty"`
-	// User          User               `bson:"user,omitempty" json:"user,omitempty"`
+	User          User               `bson:"user,omitempty" json:"user,omitempty"`
 }
 type Pengeluaran struct {
 	ID             primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
@@ -37,6 +37,7 @@ type Pengeluaran struct {
 	Jumlah_keluar  int                `bson:"jumlah_keluar,omitempty" json:"jumlah_keluar,omitempty"`
 	Sumber         string             `bson:"sumber,omitempty" json:"sumber,omitempty"`
 	Deskripsi      string             `bson:"deskripsi,omitempty" json:"deskripsi,omitempty"`
+	User           User               `bson:"user,omitempty" json:"user,omitempty"`
 }
 
 type Sumber struct {
