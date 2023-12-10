@@ -586,7 +586,7 @@ func GCFHandlerInsertPengeluaran(PASETOPUBLICKEY, MONGOCONNSTRINGENV, dbname, co
 		return GCFReturnStruct(pengeluaranResponse)
 	}
 
-	err = json.NewDecoder(r.Body).Decode(&pengeluaranResponse)
+	err = json.NewDecoder(r.Body).Decode(&pengeluaran)
 	if err != nil {
 		pengeluaranResponse.Message = "error parsing application/json3: " + err.Error()
 		return GCFReturnStruct(pengeluaranResponse)
