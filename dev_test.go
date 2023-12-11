@@ -93,45 +93,29 @@ func TestInsertPemasukan(t *testing.T) {
 
 	id, err := module.InsertPemasukan(db, "pemasukan", doc, username)
 	if err != nil {
-		t.Errorf("Error inserting todo: %v", err)
+		t.Errorf("Error inserting pemasukan: %v", err)
 	}
 	fmt.Println(id)
 }
 
-// func TestInsertPemasukan(t *testing.T) {
-// 	var doc model.Pemasukan
-// 	doc.Tanggal_masuk = "26/02/2023"
-// 	doc.Jumlah_masuk = 50000
-// 	doc.Sumber = "Gaji"
-// 	doc.Deskripsi = "dari kantor"
-// 	doc.User = model.User{Username: "Fedhira Syaila"}
-
-// 	id, err := module.InsertPemasukan(db, "pemasukan", doc)
+// func TestGetAllPemasukan(t *testing.T) {
+// 	doc, err := module.GetAllPemasukan(db, "pemasukan")
 // 	if err != nil {
-// 		t.Errorf("Error inserting todo: %v", err)
+// 		t.Errorf("Error getting pemasukan: %v", err)
+// 		return
 // 	}
-// 	fmt.Println(id)
+// 	fmt.Println(doc)
 // }
 
-func TestGetAllPemasukan(t *testing.T) {
-	doc, err := module.GetAllPemasukan(db, "pemasukan")
+func TestGetPemasukanFromUser(t *testing.T) {
+	user := "Huang Renjun"
+	doc, err := module.GetPemasukanFromUser(db, "pemasukan", user)
 	if err != nil {
 		t.Errorf("Error getting pemasukan: %v", err)
 		return
 	}
 	fmt.Println(doc)
 }
-
-// func TestGetAllPemasukan(t *testing.T) {
-// 	var docs []model.Pemasukan
-// 	docs, err := module.GetAllPemasukan(db)
-// 	if err != nil {
-// 		t.Errorf("Error inserting document: %v", err)
-// 	} else {
-// 		fmt.Println("Data berhasil disimpan dengan id :", docs)
-// 	}
-// 	fmt.Println(docs)
-// }
 
 func TestGetPemasukanFromID(t *testing.T) {
 	id, _ := primitive.ObjectIDFromHex("65755a9c5f92c5e6fb964960")
@@ -242,28 +226,14 @@ func TestInsertPengeluaran(t *testing.T) {
 
 	id, err := module.InsertPengeluaran(db, "pengeluaran", doc, username)
 	if err != nil {
-		t.Errorf("Error inserting todo: %v", err)
+		t.Errorf("Error inserting pemasukan: %v", err)
 	}
 	fmt.Println(id)
 }
 
-// func TestInsertPengeluaran(t *testing.T) {
-// 	var doc model.Pengeluaran
-// 	doc.Tanggal_keluar = "02/12/2023"
-// 	doc.Jumlah_keluar = 50000
-// 	doc.Sumber = "Konsumsi"
-// 	doc.Deskripsi = "makan ayam"
-// 	// doc.User = model.User{Username: "Fedhira Syaila"}
-
-// 	id, err := module.InsertPengeluaran(db, "pengeluaran", doc)
-// 	if err != nil {
-// 		t.Errorf("Error inserting todo: %v", err)
-// 	}
-// 	fmt.Println(id)
-// }
-
-func TestGetAllPengeluaran(t *testing.T) {
-	doc, err := module.GetAllPengeluaran(db, "pengeluaran")
+func TestGetPengeluaranFromUser(t *testing.T) {
+	user := "Fedhira Syaila"
+	doc, err := module.GetPengeluaranFromUser(db, "pengeluaran", user)
 	if err != nil {
 		t.Errorf("Error getting pengeluaran: %v", err)
 		return
@@ -272,29 +242,12 @@ func TestGetAllPengeluaran(t *testing.T) {
 }
 
 // func TestGetAllPengeluaran(t *testing.T) {
-// 	var docs []model.Pengeluaran
-// 	docs, err := module.GetAllPengeluaran(db)
+// 	doc, err := module.GetAllPengeluaran(db, "pengeluaran")
 // 	if err != nil {
-// 		t.Errorf("Error inserting document: %v", err)
-// 	} else {
-// 		fmt.Println("Data berhasil disimpan dengan id :", docs)
+// 		t.Errorf("Error getting pengeluaran: %v", err)
+// 		return
 // 	}
-// 	fmt.Println(docs)
-// }
-
-// func TestGetPengeluaranFromID(t *testing.T) {
-// 	id := "65646471f789492812e11a7a"
-// 	objectId, err := primitive.ObjectIDFromHex(id)
-// 	if err != nil {
-// 		t.Errorf("Error getting document: %v", err)
-// 	} else {
-// 		user, err := module.GetPengeluaranFromID(objectId, db)
-// 		if err != nil {
-// 			t.Errorf("Error getting document: %v", err)
-// 		} else {
-// 			fmt.Println(user)
-// 		}
-// 	}
+// 	fmt.Println(doc)
 // }
 
 func TestGetPengeluaranFromID(t *testing.T) {
