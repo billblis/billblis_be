@@ -179,6 +179,89 @@ func SignIn(db *mongo.Database, col string, insertedDoc model.User) (user model.
 }
 
 // GET USER
+
+func ChangePassword(db *mongo.Database, col string, userdata model.User) (user model.User, status bool, err error) {
+	// Periksa apakah pengguna dengan username tertentu ada
+	userExists, err := GetUserFromUsername(db, col, userdata.Username)
+	if err != nil {
+		return user, false, err
+	}
+
+	// Periksa apakah password memenuhi syarat
+	if userdata.Password == "" || userdata.ConfirmPassword == "" {
+		err = fmt.Errorf("Password tidak boleh kosong")
+		return user, false, err
+	}
+
+	if len(userdata.Password) < 6 {
+		err = fmt.Errorf("Password minimal 6 karakter")
+		return user, false, err
+	}
+
+	if strings.Contains(userdata.Password, " ") {
+		err = fmt.Errorf("Password tidak boleh mengandung spasi")
+		return user, false, err
+	}
+
+	// Periksa apakah password sama dengan password lama
+	if CheckPasswordHash(userdata.Password, userExists.Password) {
+		err = fmt.Errorf("Password tidak boleh sama")
+		return user, false, err
+	}
+
+	// Periksa apakah password dan konfirmasi password sama
+	if userdata.Password != userdata.ConfirmPassword {
+		err = fmt.Errorf("Password dan konfirmasi password tidak sama")
+		return user, false, err
+	}
+
+	// Simpan pengguna ke basis data
+	hash, _ := HashPassword(userdata.Password)
+	userExists.Password = hash
+	filter := bson.M{"username": userdata.Username}
+	update := bson.M{
+		"$set": bson.M{
+			"password": userExists.Password,
+		},
+	}
+
+	cols := db.Collection(col)
+	result, err := cols.UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		return user, false, err
+	}
+
+	if result.ModifiedCount == 0 {
+		err = fmt.Errorf("Password tidak berhasil diupdate")
+		return user, false, err
+	}
+
+	return user, true, nil
+}
+
+func DeleteUser(db *mongo.Database, col string, userdata model.User) (bool, error) {
+	_, err := GetUserFromUsername(db, col, userdata.Username)
+	if err != nil {
+		err = fmt.Errorf("Username tidak ditemukan")
+		return false, err
+	}
+
+	filter := bson.M{"username": userdata.Username}
+	cols := db.Collection(col)
+
+	result, err := cols.DeleteOne(context.Background(), filter)
+	if err != nil {
+		err = fmt.Errorf("Error deleting document: %v", err)
+		return false, err
+	}
+
+	if result.DeletedCount == 0 {
+		return false, fmt.Errorf("Failed to delete user")
+	}
+
+	return true, nil
+}
+
 func GetUserFromID(db *mongo.Database, col string, _id primitive.ObjectID) (user model.User, err error) {
 	cols := db.Collection(col)
 	filter := bson.M{"_id": _id}
@@ -192,6 +275,22 @@ func GetUserFromID(db *mongo.Database, col string, _id primitive.ObjectID) (user
 
 		err := fmt.Errorf("error retrieving data for ID %s: %s", _id, err.Error())
 		return user, err
+	}
+
+	return user, nil
+}
+
+func GetUserFromToken(db *mongo.Database, col string, _id primitive.ObjectID) (user model.User, err error) {
+	cols := db.Collection(col)
+	filter := bson.M{"_id": _id}
+
+	err = cols.FindOne(context.Background(), filter).Decode(&user)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			fmt.Println("no data found for ID", _id)
+		} else {
+			fmt.Println("error retrieving data for ID", _id, ":", err.Error())
+		}
 	}
 
 	return user, nil
@@ -254,42 +353,42 @@ func GetAllUser(db *mongo.Database, col string) (userlist []model.User, err erro
 
 // SUMBER
 
-func InsertSumber(db *mongo.Database, col string, sumber model.Sumber) (insertedID primitive.ObjectID, err error) {
-	result, err := db.Collection(col).InsertOne(context.Background(), sumber)
-	if err != nil {
-		fmt.Printf("InsertSumber: %v\n", err)
-		return primitive.NilObjectID, err
-	}
-	insertedID = result.InsertedID.(primitive.ObjectID)
-	return insertedID, nil
-}
+// func InsertSumber(db *mongo.Database, col string, sumber model.Sumber) (insertedID primitive.ObjectID, err error) {
+// 	result, err := db.Collection(col).InsertOne(context.Background(), sumber)
+// 	if err != nil {
+// 		fmt.Printf("InsertSumber: %v\n", err)
+// 		return primitive.NilObjectID, err
+// 	}
+// 	insertedID = result.InsertedID.(primitive.ObjectID)
+// 	return insertedID, nil
+// }
 
-func GetAllSumber(db *mongo.Database) (docs []model.Sumber, err error) {
-	collection := db.Collection("sumber")
-	filter := bson.M{}
-	cursor, err := collection.Find(context.Background(), filter)
-	if err != nil {
-		return docs, fmt.Errorf("kesalahan server")
-	}
-	err = cursor.All(context.Background(), &docs)
-	if err != nil {
-		return docs, fmt.Errorf("kesalahan server")
-	}
-	return docs, nil
-}
+// func GetAllSumber(db *mongo.Database) (docs []model.Sumber, err error) {
+// 	collection := db.Collection("sumber")
+// 	filter := bson.M{}
+// 	cursor, err := collection.Find(context.Background(), filter)
+// 	if err != nil {
+// 		return docs, fmt.Errorf("kesalahan server")
+// 	}
+// 	err = cursor.All(context.Background(), &docs)
+// 	if err != nil {
+// 		return docs, fmt.Errorf("kesalahan server")
+// 	}
+// 	return docs, nil
+// }
 
-func GetSumberFromID(_id primitive.ObjectID, db *mongo.Database) (doc model.Sumber, err error) {
-	collection := db.Collection("sumber")
-	filter := bson.M{"_id": _id}
-	err = collection.FindOne(context.TODO(), filter).Decode(&doc)
-	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return doc, fmt.Errorf("_id tidak ditemukan")
-		}
-		return doc, fmt.Errorf("kesalahan server")
-	}
-	return doc, nil
-}
+// func GetSumberFromID(_id primitive.ObjectID, db *mongo.Database) (doc model.Sumber, err error) {
+// 	collection := db.Collection("sumber")
+// 	filter := bson.M{"_id": _id}
+// 	err = collection.FindOne(context.TODO(), filter).Decode(&doc)
+// 	if err != nil {
+// 		if err == mongo.ErrNoDocuments {
+// 			return doc, fmt.Errorf("_id tidak ditemukan")
+// 		}
+// 		return doc, fmt.Errorf("kesalahan server")
+// 	}
+// 	return doc, nil
+// }
 
 // PEMASUKAN
 

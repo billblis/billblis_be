@@ -5,15 +5,11 @@ import (
 )
 
 type User struct {
-	ID       primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
-	Username string             `bson:"username" json:"username"`
-	Email    string             `bson:"email" json:"email"`
-	Password string             `bson:"password" json:"password"`
-}
-
-type ResetPassword struct {
-	Password    string `bson:"password,omitempty" json:"password,omitempty"`
-	Newpassword string `bson:"newpass,omitempty" json:"newpass,omitempty"`
+	ID              primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
+	Username        string             `bson:"username,omitempty" json:"username,omitempty"`
+	Email           string             `bson:"email,omitempty" json:"email,omitempty"`
+	Password        string             `bson:"password,omitempty" json:"password,omitempty"`
+	ConfirmPassword string             `bson:"confirmpassword,omitempty" json:"confirmpassword,omitempty"`
 }
 
 type Credential struct {
@@ -40,10 +36,10 @@ type Pengeluaran struct {
 	User           User               `bson:"user,omitempty" json:"user,omitempty"`
 }
 
-type Sumber struct {
-	ID          primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
-	Nama_sumber string             `bson:"nama_sumber" json:"nama_sumber"`
-}
+// type Sumber struct {
+// 	ID          primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
+// 	Nama_sumber string             `bson:"nama_sumber" json:"nama_sumber"`
+// }
 
 type PemasukanResponse struct {
 	Status  bool        `json:"status" bson:"status"`
@@ -57,11 +53,11 @@ type PengeluaranResponse struct {
 	Data    []Pengeluaran `json:"data" bson:"data"`
 }
 
-type SumberResponse struct {
-	Status  bool     `json:"status" bson:"status"`
-	Message string   `json:"message,omitempty" bson:"message,omitempty"`
-	Data    []Sumber `json:"data" bson:"data"`
-}
+// type SumberResponse struct {
+// 	Status  bool     `json:"status" bson:"status"`
+// 	Message string   `json:"message,omitempty" bson:"message,omitempty"`
+// 	Data    []Sumber `json:"data" bson:"data"`
+// }
 
 type Response struct {
 	Status  bool   `json:"status" bson:"status"`
