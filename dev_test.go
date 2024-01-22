@@ -16,6 +16,7 @@ func TestSignUp(t *testing.T) {
 	var doc model.User
 	doc.Username = "Marlina Lubis"
 	doc.Email = "marlina@gmail.com"
+	doc.Phonenumber = "6285921006700"
 	doc.Password = "marlinalubis12"
 
 	err := module.SignUp(db, "user", doc)
@@ -23,6 +24,19 @@ func TestSignUp(t *testing.T) {
 		t.Errorf("Error inserting document: %v", err)
 	} else {
 		fmt.Println("Data berhasil disimpan dengan nama :", doc.Username)
+	}
+}
+
+// validate phone number
+func TestSendWhatsAppConfirmation(t *testing.T) {
+	username := "Marlina Lubis"
+	phonenumber := "6281220280851"
+
+	err := module.SendWhatsAppConfirmation(username, phonenumber)
+	if err != nil {
+		t.Errorf("Error sending whatsapp: %v", err)
+	} else {
+		fmt.Println("Send whatsapp success")
 	}
 }
 

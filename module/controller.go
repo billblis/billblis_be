@@ -1,18 +1,22 @@
 package module
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
+	"regexp"
 	"strings"
 
-	"github.com/badoux/checkmail"
-	"github.com/billblis/billblis_be/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+
+	"github.com/badoux/checkmail"
+	"github.com/billblis/billblis_be/model"
 )
 
 func MongoConnect(MongoString, dbname string) *mongo.Database {
@@ -105,6 +109,36 @@ func DeleteOneDoc(_id primitive.ObjectID, db *mongo.Database, col string) error 
 	return nil
 }
 
+// validate phone number
+func ValidatePhoneNumber(phoneNumber string) (bool, error) {
+	// Define the regular expression pattern for numeric characters
+	numericPattern := `^[0-9]+$`
+
+	// Compile the numeric pattern
+	numericRegexp, err := regexp.Compile(numericPattern)
+	if err != nil {
+		return false, err
+	}
+	// Check if the phone number consists only of numeric characters
+	if !numericRegexp.MatchString(phoneNumber) {
+		return false, nil
+	}
+
+	// Define the regular expression pattern for "62" followed by 6 to 12 digits
+	pattern := `^62\d{6,13}$`
+
+	// Compile the regular expression
+	regexpPattern, err := regexp.Compile(pattern)
+	if err != nil {
+		return false, err
+	}
+
+	// Test if the phone number matches the pattern
+	isValid := regexpPattern.MatchString(phoneNumber)
+
+	return isValid, nil
+}
+
 // SIGN UP
 func SignUp(db *mongo.Database, col string, insertedDoc model.User) error {
 	objectId := primitive.NewObjectID()
@@ -129,6 +163,11 @@ func SignUp(db *mongo.Database, col string, insertedDoc model.User) error {
 		return fmt.Errorf("Username sudah terdaftar")
 	}
 
+	isValid, _ := ValidatePhoneNumber(insertedDoc.Phonenumber)
+	if !isValid {
+		return fmt.Errorf("Nomor telepon tidak valid")
+	}
+
 	if strings.Contains(insertedDoc.Password, " ") {
 		return fmt.Errorf("password tidak boleh mengandung spasi")
 	}
@@ -145,15 +184,64 @@ func SignUp(db *mongo.Database, col string, insertedDoc model.User) error {
 	hash, _ := HashPassword(insertedDoc.Password)
 	// insertedDoc.Password = hash
 	user := bson.M{
-		"_id":      objectId,
-		"email":    insertedDoc.Email,
-		"password": hash,
-		"username": insertedDoc.Username,
+		"_id":         objectId,
+		"email":       insertedDoc.Email,
+		"phonenumber": insertedDoc.Phonenumber,
+		"username":    insertedDoc.Username,
+		"password":    hash,
 	}
+	// _, err := InsertOneDoc(db, col, user)
+	// if err != nil {
+	// 	return err
+	// }
+	// return nil
 	_, err := InsertOneDoc(db, col, user)
+	if err != nil {
+		return fmt.Errorf("SignUp: %v", err)
+	}
+
+	// Send whatsapp confirmation
+	err = SendWhatsAppConfirmation(insertedDoc.Username, insertedDoc.Phonenumber)
+	if err != nil {
+		return fmt.Errorf("SendWhatsAppConfirmation: %v", err)
+	}
+
+	return nil
+}
+
+func SendWhatsAppConfirmation(username, phonenumber string) error {
+	url := "https://api.wa.my.id/api/send/message/text"
+
+	// Data yang akan dikirimkan dalam format JSON
+	jsonStr := []byte(`{
+        "to": "` + phonenumber + `",
+        "isgroup": false,
+        "messages": "Hello ` + username + `!!! ˗ˏˋ ♡ ˎˊ˗\nTerima kasih telah melakukan Registrasi akun di Billblis, silakan login atau tekan link dibawah ini untuk melanjutkan.\n⬇ ⬇ ⬇ ⬇ ⬇ \nhttps://billblis.my.id/login.html"
+    }`)
+
+	// Membuat permintaan HTTP POST
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
 	if err != nil {
 		return err
 	}
+
+	// Menambahkan header ke permintaan
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Token", "v4.public.eyJleHAiOiIyMDI0LTAyLTIxVDA3OjU0OjE1WiIsImlhdCI6IjIwMjQtMDEtMjJUMDc6NTQ6MTVaIiwiaWQiOiI2Mjg3ODg4MjE3MjgzIiwibmJmIjoiMjAyNC0wMS0yMlQwNzo1NDoxNVoifUupI4YPhWvgD5clft5bC0ExZM1aBiXZeCmqzo59Fiy2wCiNv7_Tb9i3hI7q2XC2drt9ULJp24csATsTXXcDBgY")
+	// req.Header.Set("Token", "v4.public.eyJleHAiOiIyMDI0LTAyLTE5VDIxOjA3OjM2WiIsImlhdCI6IjIwMjQtMDEtMjBUMjE6MDc6MzZaIiwiaWQiOiI2MjgyMzE3MTUwNjgxIiwibmJmIjoiMjAyNC0wMS0yMFQyMTowNzozNloiff1YQuHHPwSzGpisAMb9rTLP58-jCqtByzePJACBLghprkq2HXtTSbVTShc49m3GIVkU42VSl8uSGme8c4vXnQc")
+	req.Header.Set("Content-Type", "application/json")
+
+	// Melakukan permintaan HTTP POST
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// Menampilkan respons dari server
+	fmt.Println("Response Status:", resp.Status)
+
 	return nil
 }
 
