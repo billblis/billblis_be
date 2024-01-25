@@ -30,7 +30,7 @@ func TestSignUp(t *testing.T) {
 // validate phone number
 func TestSendWhatsAppConfirmation(t *testing.T) {
 	username := "Marlina Lubis"
-	phonenumber := "6281220280851"
+	phonenumber := "6285921006700"
 
 	err := module.SendWhatsAppConfirmation(username, phonenumber)
 	if err != nil {

@@ -216,7 +216,7 @@ func SendWhatsAppConfirmation(username, phonenumber string) error {
 	jsonStr := []byte(`{
         "to": "` + phonenumber + `",
         "isgroup": false,
-        "messages": "Hello ` + username + `!!! ˗ˏˋ ♡ ˎˊ˗\nTerima kasih telah melakukan Registrasi akun di Billblis, silakan login atau tekan link dibawah ini untuk melanjutkan.\n⬇ ⬇ ⬇ ⬇ ⬇ \nhttps://billblis.my.id/login.html"
+        "messages": "Selamat datang di Billblis ` + username + `! 🌟\nTerima kasih telah melakukan registrasi akun. Mulai langkah awal menuju kebebasan finansial! 💼💸 "
     }`)
 
 	// Membuat permintaan HTTP POST
